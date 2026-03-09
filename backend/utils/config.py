@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
 
+    # OAuth2 — OpenAI
+    openai_oauth_client_id: Optional[str] = None
+    openai_oauth_client_secret: Optional[str] = None
+
+    # OAuth2 — Anthropic
+    anthropic_oauth_client_id: Optional[str] = None
+    anthropic_oauth_client_secret: Optional[str] = None
+
+    # OAuth2 — Google Gemini
+    google_oauth_client_id: Optional[str] = None
+    google_oauth_client_secret: Optional[str] = None
+
     # CORS
     cors_origins: list[str] = ["*"]
 
@@ -31,6 +43,10 @@ class Settings(BaseSettings):
     # Celery
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/0"
+
+    # Auth & Security
+    secret_key: str = "your-secret-key-change-in-production"
+    frontend_url: str = "http://localhost:8000"
 
     def model_post_init(self, __context):
         # Convenience: promote OPENAI_API_KEY / ANTHROPIC_API_KEY to unified fields

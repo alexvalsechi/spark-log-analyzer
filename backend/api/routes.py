@@ -13,12 +13,9 @@ from typing import Optional
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
-try:
-    from ..tasks import process_log_task
-except ImportError:
-    from tasks import process_log_task
-from models.job import JobStatus, JobResult
-from utils.config import get_settings
+from backend.tasks import process_log_task
+from backend.models.job import JobStatus, JobResult
+from backend.utils.config import get_settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -33,10 +30,18 @@ async def upload_log(
     log_zip: UploadFile = File(..., description="Spark event log ZIP file"),
     pyspark_files: list[UploadFile] = File(default=[], description="Optional .py job files"),
     compact: bool = Form(default=False),
-    llm_provider: Optional[str] = Form(default=None),
-    api_key: Optional[str] = Form(default=None),
+    user_id: Optional[str] = Form(default=None),
+    provider: Optional[str] = Form(default=None),
+    api_key: Optional[str] = Form(default=None),  # Still support legacy BYOK
+    language: str = Form(default="en"),
 ):
-    """Accept a ZIP of Spark logs, enqueue analysis, return job_id."""
+    """
+    Accept a ZIP of Spark logs, enqueue analysis, return job_id.
+    
+    Either provide:
+    - OAuth: user_id + provider (token retrieved from session)
+    - BYOK: api_key (legacy, less secure)
+    """
     if not log_zip.filename.endswith(".zip"):
         raise HTTPException(status_code=422, detail="log_zip must be a .zip file")
 
@@ -55,12 +60,14 @@ async def upload_log(
         zip_bytes=zip_bytes,
         py_files=py_files,
         compact=compact,
-        llm_provider=llm_provider,
-        api_key=api_key,
+        user_id=user_id,  # OAuth user ID
+        provider=provider,  # OAuth provider
+        api_key=api_key,  # Fallback BYOK
+        language=language,
     )
     _jobs[job_id].task_id = task.id  # Store Celery task ID
 
-    logger.info("Enqueued Celery task %s for job %s", task.id, job_id)
+    logger.info("Enqueued Celery task %s for job %s (user_id=%s, provider=%s)", task.id, job_id, user_id, provider)
     return {"job_id": job_id, "status": "pending"}
 
 

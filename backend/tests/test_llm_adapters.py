@@ -7,9 +7,9 @@ from __future__ import annotations
 import pytest
 from unittest.mock import MagicMock
 
-from adapters.llm_adapters import NoOpAdapter, LLMClientFactory, BaseLLMAdapter
-from services.llm_analyzer import LLMAnalyzer
-from models.job import AppSummary
+from backend.adapters.llm_adapters import NoOpAdapter, LLMClientFactory, BaseLLMAdapter
+from backend.services.llm_analyzer import LLMAnalyzer
+from backend.models.job import AppSummary
 
 
 class EchoAdapter(BaseLLMAdapter):
@@ -78,6 +78,18 @@ class TestLLMAnalyzer:
         )
         assert "job.py" in prompts[0]
         assert "parquet" in prompts[0]
+
+    def test_language_switch(self, minimal_summary):
+        """Prompt should reflect requested language."""
+        prompts = []
+        class CapturingAdapter(BaseLLMAdapter):
+            def _complete(self, prompt: str) -> str:
+                prompts.append(prompt)
+                return "ok"
+
+        analyzer = LLMAnalyzer(adapter=CapturingAdapter())
+        analyzer.analyze("# Report", minimal_summary, language="pt")
+        assert "Você é um engenheiro" in prompts[0]
 
     def test_retry_on_failure(self, minimal_summary):
         """Adapter that fails twice then succeeds should still return result."""

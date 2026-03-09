@@ -83,7 +83,7 @@ cp ../.env.example .env
 # Edit .env with your API key
 
 # 3. Run
-uvicorn app:app --reload --port 8000
+uvicorn backend.app:app --reload --port 8000
 
 # 4. Open browser
 open http://localhost:8000
@@ -109,9 +109,10 @@ open http://localhost:8000
 
 1. **Upload** your Spark event log ZIP (produced by `spark.eventLog.enabled=true`).
 2. *(Optional)* Upload `.py` source files for code-level recommendations.
-3. *(Optional)* Select an LLM provider and enter your API key (or set env vars).
-4. Click **Analyze →** and wait for processing.
-5. Review the KPI cards, stage table, and AI analysis panel.
+3. *(Optional)* Select a language using the dropdown in the authentication section — English is the default; choosing Português will translate all UI labels and send a Portuguese prompt to the LLM.
+4. *(Optional)* Select an LLM provider and enter your API key (or set env vars).
+5. Click **Analyze →** and wait for processing.
+6. Review the KPI cards, stage table, and AI analysis panel.
 6. **Download** the report as Markdown or JSON.
 
 ---
@@ -131,8 +132,64 @@ open http://localhost:8000
 | `log_zip` | file | ✅ | `.zip` containing Spark event log files |
 | `pyspark_files` | file[] | — | `.py` job source files |
 | `compact` | bool | — | Generate shorter report (default: false) |
-| `llm_provider` | string | — | `openai` or `anthropic` |
-| `api_key` | string | — | API key (overrides env var) |
+| `user_id` | string | — | OAuth2 user ID (from login) |
+| `provider` | string | — | `openai`, `anthropic`, or `gemini` (OAuth2) |
+| `api_key` | string | — | API key (legacy BYOK, overrides env var) |
+
+---
+
+## OAuth2 Authentication (Recommended)
+
+Instead of pasting API keys, use **OAuth2** to authenticate safely with LLM providers. This tool supports:
+
+- **OpenAI**
+- **Anthropic Claude**
+- **Google Generative AI (Gemini)**
+
+### Setup OAuth2
+
+1. **Register your app** with each provider:
+   - [OpenAI Console](https://platform.openai.com/account/api-keys)
+   - [Anthropic Console](https://console.anthropic.com/settings)
+   - [Google Cloud Console](https://console.cloud.google.com)
+
+2. **Get OAuth2 credentials** (Client ID + Secret) and add to `.env`:
+   ```
+   OPENAI_OAUTH_CLIENT_ID=your-openai-client-id
+   OPENAI_OAUTH_CLIENT_SECRET=your-openai-client-secret
+   ANTHROPIC_OAUTH_CLIENT_ID=your-anthropic-client-id
+   ANTHROPIC_OAUTH_CLIENT_SECRET=your-anthropic-client-secret
+   GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+   GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
+   SECRET_KEY=your-random-secret-key
+   FRONTEND_URL=http://localhost:8000
+   ```
+
+3. **On the web interface**, click one of the OAuth login buttons (e.g., "🔑 Login with OpenAI").
+
+4. **Authorize** the app on the provider's login page.
+
+5. **Start analyzing** — your tokens are stored securely in Redis!
+
+### BYOK Fallback (Legacy)
+
+If you prefer not to use OAuth2, you can still provide your API keys manually:
+
+- **OpenAI**: Set `OPENAI_API_KEY` in `.env` or paste in the web form
+- **Anthropic**: Set `ANTHROPIC_API_KEY` in `.env` or paste in the web form
+- **Google Gemini**: Not supported via BYOK (OAuth2 only)
+
+**Note**: BYOK is less secure than OAuth2 as keys travel through the browser. Use OAuth2 when possible!
+
+### OAuth2 Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/auth/login/{provider}` | Redirect to provider login |
+| `GET` | `/api/auth/callback/{provider}` | OAuth callback (auto-handled) |
+| `POST` | `/api/auth/logout/{provider}` | Logout and revoke token |
+| `GET` | `/api/auth/providers/{user_id}` | List connected providers |
+| `GET` | `/api/auth/status/{user_id}/{provider}` | Check token validity |
 
 ---
 
@@ -159,7 +216,7 @@ export CELERY_BROKER_URL=redis://localhost:6379/0
 export CELERY_RESULT_BACKEND=redis://localhost:6379/0
 
 # Start the web server
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.app:app --reload --host 0.0.0.0 --port 8000
 
 # In another terminal, start Celery workers
 celery -A backend.celery_app worker --loglevel=info
@@ -186,6 +243,24 @@ This starts:
 
 ---
 
+## Security & Token Management
+
+📖 **How OAuth2 tokens are handled:**
+
+1. **Storage**: Tokens are stored in Redis with automatic expiration (TTL based on provider settings).
+2. **Encryption**: Token payloads include creation timestamp and provider metadata; sensitive data remains encrypted in Redis.
+3. **Session-based**: Each user is assigned a unique `user_id` upon first OAuth login; this ID is used to retrieve tokens from Redis during analysis.
+4. **Automatic cleanup**: Tokens expire and are automatically removed from Redis based on provider requirements (typically 24-90 days).
+5. **No persistence**: Tokens are **never** saved to disk or database; they live only in Redis memory.
+
+⚠️ **Production considerations:**
+- Use strong `SECRET_KEY` for JWT state tokens (change from default!).
+- Use HTTPS in production to protect OAuth redirects and session cookies.
+- Implement rate limiting on `/api/auth/*` endpoints to prevent abuse.
+- Monitor token storage size in Redis and consider adding token rotation policies.
+
+---
+
 ## Running Tests
 
 ## Configuration Reference
@@ -194,10 +269,13 @@ This starts:
 |---|---|---|
 | `OPENAI_API_KEY` | — | OpenAI API key (auto-selects `openai` as provider) |
 | `ANTHROPIC_API_KEY` | — | Anthropic API key (auto-selects `anthropic` as provider) |
-| `LLM_PROVIDER` | — | Explicit override: `openai` or `anthropic` |
+| `GOOGLE_API_KEY` | — | Google Gemini API key (auto-selects `google` as provider) |
+| `LLM_PROVIDER` | — | Explicit override: `openai`, `anthropic`, or `google` |
 | `LLM_API_KEY` | — | Unified key (lower priority than above) |
 | `MAX_ZIP_MB` | `500` | Maximum ZIP size accepted |
 | `CORS_ORIGINS` | `["*"]` | Allowed CORS origins (JSON array string) |
+
+**Note**: While OAuth2 is the recommended authentication method for security, BYOK (Bring Your Own Key) is still supported as a fallback option. Users can provide their own API keys directly in the UI when not using OAuth2.
 
 ---
 

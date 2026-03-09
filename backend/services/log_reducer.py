@@ -20,7 +20,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Iterator, Optional
 
-from models.job import AppSummary, StageMetrics
+from backend.models.job import AppSummary, StageMetrics
 
 logger = logging.getLogger(__name__)
 

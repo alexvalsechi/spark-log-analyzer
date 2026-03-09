@@ -8,12 +8,13 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from models.job import AppSummary
-from adapters.llm_adapters import LLMClientFactory, BaseLLMAdapter
+from backend.models.job import AppSummary
+from backend.adapters.llm_adapters import LLMClientFactory, BaseLLMAdapter
 
 logger = logging.getLogger(__name__)
 
-_SYSTEM_INSTRUCTIONS = """
+_SYSTEM_INSTRUCTIONS = {
+    "en": """
 You are an expert Apache Spark performance engineer.
 Analyze the following reduced Spark event log report and:
 
@@ -23,7 +24,19 @@ Analyze the following reduced Spark event log report and:
 4. If PySpark source code is provided, suggest concrete code changes.
 
 Be concise and technical. Use markdown formatting.
+""".strip(),
+    "pt": """
+Você é um engenheiro especialista em desempenho do Apache Spark.
+Analise o relatório reduzido de eventos do Spark abaixo e:
+
+1. Identifique os 3 PRINCIPAIS gargalos de desempenho (desequilíbrio de dados, pressão de GC, overhead de shuffle, etc.).
+2. Para cada gargalo, explique POR QUE é um problema e o IMPACTO na duração do job.
+3. Forneça recomendações acionáveis e específicas (com trechos de código PySpark quando relevantes).
+4. Se o código-fonte PySpark for fornecido, sugira alterações concretas.
+
+Seja conciso e técnico. Use formatação Markdown.
 """.strip()
+}
 
 
 class LLMAnalyzer:
@@ -51,11 +64,13 @@ class LLMAnalyzer:
         py_files: Optional[dict[str, bytes]] = None,
         provider: Optional[str] = None,
         api_key: Optional[str] = None,
+        language: str = "en",
     ) -> str:
         adapter = self._get_adapter(provider, api_key)
 
+        instr = _SYSTEM_INSTRUCTIONS.get(language, _SYSTEM_INSTRUCTIONS["en"])
         prompt_parts = [
-            _SYSTEM_INSTRUCTIONS,
+            instr,
             "",
             "## Reduced Log Report",
             reduced_report[:6000],  # guard context window

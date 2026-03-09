@@ -5,6 +5,14 @@ pydantic-settings>=2.3.0
 python-multipart>=0.0.9
 aiofiles>=23.2.1
 
+# OAuth2 & Auth
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Session management
+starlette-sessions>=0.0.5
+
 # Async task queue
 celery[redis]>=5.4.0
 redis>=5.0.0

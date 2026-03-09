@@ -9,10 +9,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from models.job import JobResult, JobStatus
-from services.log_reducer import LogReducer
-from services.llm_analyzer import LLMAnalyzer
-from utils.config import get_settings
+from backend.models.job import JobResult, JobStatus
+from backend.services.log_reducer import LogReducer
+from backend.services.llm_analyzer import LLMAnalyzer
+from backend.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -34,6 +34,7 @@ class JobService:
         compact: bool = False,
         llm_provider: Optional[str] = None,
         api_key: Optional[str] = None,
+        language: str = "en",
     ) -> JobResult:
         # Resolve provider/key (form > env)
         provider = llm_provider or settings.llm_provider
@@ -50,6 +51,7 @@ class JobService:
             py_files=py_files,
             provider=provider,
             api_key=key,
+            language=language,
         )
 
         return JobResult(

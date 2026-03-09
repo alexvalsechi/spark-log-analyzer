@@ -8,9 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from api.routes import router
-from utils.config import get_settings
-from utils.logging_config import setup_logging
+from .api.routes import router
+from .oauth_routes import router as oauth_router
+from .utils.config import get_settings
+from .utils.logging_config import setup_logging
 
 settings = get_settings()
 
@@ -39,6 +40,7 @@ app.add_middleware(
 )
 
 app.include_router(router, prefix="/api")
+app.include_router(oauth_router, prefix="/api")
 
 # Serve the SPA frontend
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

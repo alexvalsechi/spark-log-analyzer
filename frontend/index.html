@@ -209,6 +209,25 @@
     .btn-analyze:active { transform: scale(0.98); }
     .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* ── OAuth buttons ──────────────────────────────────────── */
+    .btn-oauth {
+      padding: 10px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      font-family: var(--sans); font-size: 0.9rem;
+      color: var(--text); cursor: pointer;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .btn-oauth:hover {
+      background: var(--border2);
+      border-color: var(--accent);
+    }
+    .btn-oauth:active {
+      transform: scale(0.95);
+    }
+
     /* ── Status bar ─────────────────────────────────────────── */
     .status-bar {
       margin-top: 20px;
@@ -424,8 +443,68 @@
       <h1>Spark Log Analyzer</h1>
       <p>Event log reduction · Bottleneck detection · AI diagnostics</p>
     </div>
-    <span class="version-badge">v2.0</span>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+      <label for="lang-select" style="font-size:0.85rem; color:var(--text-dim);">Language:</label>
+      <select id="lang-select" style="background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); padding:4px 8px; font-family:var(--mono); font-size:0.82rem; color:var(--text);">
+        <option value="en">English</option>
+        <option value="pt">Português (Brasil)</option>
+      </select>
+      <span class="version-badge">v2.0</span>
+    </div>
   </header>
+
+  <!-- OAuth2 Authentication -->
+  <div style="margin-top: 40px; margin-bottom: 40px;">
+    <div class="section-label" id="lbl-auth">00 — Authentication (Optional)</div>
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+      <button class="btn-oauth" id="btn-oauth-openai" onclick="initiateOAuth('openai')">
+        🔑 Login with OpenAI
+      </button>
+      <button class="btn-oauth" id="btn-oauth-anthropic" onclick="initiateOAuth('anthropic')">
+        🧠 Login with Anthropic
+      </button>
+      <button class="btn-oauth" id="btn-oauth-gemini" onclick="initiateOAuth('gemini')">
+        ✨ Login with Google Gemini
+      </button>
+    </div>
+
+    <div id="oauth-status" style="display: none; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem;">
+      <span id="oauth-status-text"></span>
+      <button onclick="clearOAuthSession()" style="margin-left: auto; padding: 4px 8px; cursor: pointer;">×</button>
+    </div>
+
+    <div id="tip-text" style="font-size: 0.85rem; color: var(--text-dim); margin-top: 12px;">
+      <strong>Tip:</strong> Login with OAuth2 to avoid pasting API keys. Alternatively, you can still provide your API key manually below.
+    </div>
+
+    <!-- LLM options & output mode -->
+    <div class="options-row" style="margin-top:24px;">
+      <div class="field">
+        <label>LLM Provider</label>
+        <select id="sel-provider">
+          <option value="">— none —</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="gemini">Google Gemini</option>
+        </select>
+      </div>
+      <div class="field" id="api-key-field" style="display: block;">
+        <label>API Key <span style="font-weight: normal; opacity: 0.7;">(optional if OAuth logged in)</span></label>
+        <input type="password" id="input-key" placeholder="sk-… (fallback to OAuth if logged in)" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Output Mode</label>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="chk-compact">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </label>
+          <span class="toggle-label">Compact report</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Upload section -->
   <div style="margin-top: 40px">
@@ -445,42 +524,15 @@
       <div class="drop-zone" id="zone-py" ondragover="onDragOver(event,'py')" ondragleave="onDragLeave('py')" ondrop="onDrop(event,'py')">
         <input type="file" id="input-py" accept=".py" multiple onchange="onFileChange('py')">
         <span class="drop-icon">🐍</span>
-        <div class="drop-title">PySpark Source Files <span style="opacity:.5;font-size:.75em">(optional)</span></div>
+        <div class="drop-title" id="py-title">PySpark Source Files <span style="opacity:.5;font-size:.75em">(optional)</span></div>
         <div class="drop-hint">Drag &amp; drop or click to select<br><em style="opacity:.6">.py — job source code</em></div>
         <div class="file-name" id="name-py"></div>
       </div>
     </div>
 
-    <!-- Options -->
-    <div class="options-row" style="margin-top:16px">
-      <div class="field">
-        <label>LLM Provider</label>
-        <select id="sel-provider">
-          <option value="">— none —</option>
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Anthropic</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>API Key</label>
-        <input type="password" id="input-key" placeholder="sk-… or env var used" autocomplete="off" />
-      </div>
-      <div class="field">
-        <label>Output Mode</label>
-        <div class="toggle-wrap">
-          <label class="toggle">
-            <input type="checkbox" id="chk-compact">
-            <div class="toggle-track"><div class="toggle-thumb"></div></div>
-          </label>
-          <span class="toggle-label">Compact report</span>
-        </div>
-      </div>
-      <button class="btn-analyze" id="btn-submit" onclick="submitJob()" disabled>
-        Analyze →
-      </button>
+    <div style="margin-top:24px; text-align:center;">
+      <button id="btn-submit" class="btn-analyze" onclick="submitJob()" disabled>Analyze →</button>
     </div>
-
-    <!-- Status bar -->
     <div class="status-bar" id="status-bar">
       <div class="status-dot" id="status-dot"></div>
       <span class="status-msg" id="status-msg">Idle</span>
@@ -528,6 +580,10 @@
 
 </div><!-- /shell -->
 
+<footer style="margin-top: 60px; padding: 20px 0; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: var(--text-dim);">
+  <p>Created by <strong>Alex Valsechi</strong> | <a href="https://www.linkedin.com/in/alex-valsechi/" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none;">LinkedIn</a></p>
+</footer>
+
 <script>
 /* ── State ──────────────────────────────────────────── */
 let currentJobId = null;
@@ -536,6 +592,105 @@ let startTs      = null;
 let elapsedTimer = null;
 let zipFile      = null;
 let pyFiles      = [];
+let currentOAuthUser = null;
+let currentOAuthProvider = null;
+let currentLang = 'en';
+
+/* translation dictionary */
+const translations = {
+  en: {
+    authLabel: '00 — Authentication (Optional)',
+    loginOpenAI: '🔑 Login with OpenAI',
+    loginAnthropic: '🧠 Login with Anthropic',
+    loginGemini: '✨ Login with Google Gemini',
+    tip: 'Tip: Login with OAuth2 to avoid pasting API keys. Alternatively, you can still provide your API key manually below.',
+    llmProviderLabel: 'LLM Provider',
+    apiKeyLabel: 'API Key (optional if OAuth logged in)',
+    outputModeLabel: 'Output Mode',
+    compactReport: 'Compact report',
+    uploadLabel: '01 — Upload',
+    eventLogZip: 'Event Log ZIP',
+    pysparkFiles: 'PySpark Source Files',
+    analyzeButton: 'Analyze →',
+    statusIdle: 'Idle',
+    statusUploading: 'Uploading…',
+    statusProcessing: 'Processing event log…',
+    statusAnalyzing: 'Analyzing stages & calling LLM…',
+    statusComplete: 'Analysis complete',
+    statusError: 'Error',
+  },
+  pt: {
+    authLabel: '00 — Autenticação (Opcional)',
+    loginOpenAI: '🔑 Login com OpenAI',
+    loginAnthropic: '🧠 Login com Anthropic',
+    loginGemini: '✨ Login com Google Gemini',
+    tip: 'Dica: faça login com OAuth2 para evitar colar chaves de API. Alternativamente, você ainda pode fornecer sua chave manualmente abaixo.',
+    llmProviderLabel: 'Provedor LLM',
+    apiKeyLabel: 'Chave API (opcional se logado via OAuth)',
+    outputModeLabel: 'Modo de Saída',
+    compactReport: 'Relatório compacto',
+    uploadLabel: '01 — Enviar',
+    eventLogZip: 'ZIP de Log',
+    pysparkFiles: 'Arquivos PySpark',
+    analyzeButton: 'Analisar →',
+    statusIdle: 'Inativo',
+    statusUploading: 'Enviando…',
+    statusProcessing: 'Processando log…',
+    statusAnalyzing: 'Analisando estágios e chamando LLM…',
+    statusComplete: 'Análise concluída',
+    statusError: 'Erro',
+  }
+};
+
+function updateLanguage() {
+  const t = translations[currentLang] || translations.en;
+  document.getElementById('lbl-auth').textContent = t.authLabel;
+  document.getElementById('btn-oauth-openai').textContent = t.loginOpenAI;
+  document.getElementById('btn-oauth-anthropic').textContent = t.loginAnthropic;
+  document.getElementById('btn-oauth-gemini').textContent = t.loginGemini;
+  document.querySelector('#oauth-status-text')?.textContent = '';
+  document.getElementById('tip-text').innerHTML = `<strong>${currentLang==='pt'?'Dica':'Tip'}:</strong> ${t.tip}`;
+  // update optional label if necessary
+  document.getElementById('py-title').innerHTML = currentLang === 'pt'
+    ? t.pysparkFiles.replace('(optional)','(opcional)')
+    : t.pysparkFiles + ' <span style="opacity:.5;font-size:.75em">(optional)</span>';
+  document.querySelector('label[for="sel-provider"]').textContent = t.llmProviderLabel;
+  document.querySelector('#api-key-field label').firstChild.textContent = t.apiKeyLabel;
+  document.querySelector('label[for="chk-compact"]').textContent = t.outputModeLabel;
+  document.querySelector('.toggle-label').textContent = t.compactReport;
+  document.querySelector('.section-label:nth-of-type(2)').textContent = t.uploadLabel;
+  document.querySelector('#zone-zip .drop-title').textContent = t.eventLogZip;
+  document.querySelector('#zone-py .drop-title').innerHTML = t.pysparkFiles + ' <span style="opacity:.5;font-size:.75em">(optional)</span>';
+  document.getElementById('btn-submit').textContent = t.analyzeButton;
+  // status text will be set dynamically by setStatus
+}
+
+function setStatus(status, msg) {
+  const t = translations[currentLang] || translations.en;
+  const statusMsgEl = document.getElementById('status-msg');
+  statusMsgEl.textContent = msg || (
+    status === 'pending' ? t.statusUploading :
+    status === 'running' ? t.statusAnalyzing :
+    status === 'done' ? t.statusComplete :
+    status === 'error' ? t.statusError : t.statusIdle
+  );
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot ' + status;
+}
+
+// language selector handler
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('lang-select');
+  const saved = localStorage.getItem('sparkui_lang');
+  if (saved) { currentLang = saved; sel.value = saved; }
+  sel.addEventListener('change', () => {
+    currentLang = sel.value;
+    localStorage.setItem('sparkui_lang', currentLang);
+    updateLanguage();
+  });
+  updateLanguage();
+  handleOAuthCallback();
+});
 
 /* ── File handlers ──────────────────────────────────── */
 function onFileChange(type) {
@@ -581,6 +736,67 @@ function checkReady() {
   document.getElementById('btn-submit').disabled = !zipFile;
 }
 
+/* ── OAuth2 ─────────────────────────────────────────── */
+let currentOAuthUser = null;
+let currentOAuthProvider = null;
+
+function initiateOAuth(provider) {
+  // Redirect to backend OAuth login endpoint
+  const loginUrl = `/api/auth/login/${provider}`;
+  window.location.href = loginUrl;
+}
+
+function handleOAuthCallback() {
+  // Called on page load to check for OAuth callback params
+  const params = new URLSearchParams(window.location.search);
+  const oauthUser = params.get('oauth_user');
+  const provider = params.get('provider');
+
+  if (oauthUser && provider) {
+    currentOAuthUser = oauthUser;
+    currentOAuthProvider = provider;
+    displayOAuthStatus();
+    
+    // Update provider selector
+    document.getElementById('sel-provider').value = provider;
+    
+    // Clear the URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+function displayOAuthStatus() {
+  const statusDiv = document.getElementById('oauth-status');
+  const statusText = document.getElementById('oauth-status-text');
+  const apiKeyField = document.getElementById('api-key-field');
+  
+  if (currentOAuthUser && currentOAuthProvider) {
+    statusText.textContent = `✓ Logged in with ${currentOAuthProvider.toUpperCase()} (User: ${currentOAuthUser.substring(0, 8)}…)`;
+    statusDiv.style.display = 'flex';
+    statusDiv.style.justifyContent = 'space-between';
+    statusDiv.style.alignItems = 'center';
+    
+    // Hide API key field when OAuth is active
+    apiKeyField.style.display = 'none';
+    
+    // Auto-select provider
+    document.getElementById('sel-provider').value = currentOAuthProvider;
+  } else {
+    statusDiv.style.display = 'none';
+    
+    // Show API key field when no OAuth
+    apiKeyField.style.display = 'block';
+  }
+}
+
+function clearOAuthSession() {
+  currentOAuthUser = null;
+  currentOAuthProvider = null;
+  document.getElementById('oauth-status').style.display = 'none';
+  document.getElementById('sel-provider').value = '';
+  document.getElementById('api-key-field').style.display = 'block'; // Show API key field again
+}
+
 /* ── Submit ─────────────────────────────────────────── */
 async function submitJob() {
   if (!zipFile) return;
@@ -590,8 +806,16 @@ async function submitJob() {
   fd.append('log_zip', zipFile, zipFile.name);
   pyFiles.forEach(f => fd.append('pyspark_files', f, f.name));
   fd.append('compact',      document.getElementById('chk-compact').checked);
-  fd.append('llm_provider', document.getElementById('sel-provider').value || '');
-  fd.append('api_key',      document.getElementById('input-key').value || '');
+  fd.append('language',     currentLang);
+  
+  // Use OAuth if available, otherwise fall back to manual API key
+  if (currentOAuthUser && currentOAuthProvider) {
+    fd.append('user_id', currentOAuthUser);
+    fd.append('provider', currentOAuthProvider);
+  } else {
+    fd.append('llm_provider', document.getElementById('sel-provider').value || '');
+    fd.append('api_key',      document.getElementById('input-key').value || '');
+  }
 
   setStatus('pending', 'Uploading…');
   startTs = Date.now();
@@ -814,6 +1038,11 @@ function fmtBytes(b) {
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+/* ── Initialize ─────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  handleOAuthCallback();
+});
 </script>
 </body>
 </html>

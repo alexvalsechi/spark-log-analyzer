@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   redis:
     image: redis:7-alpine
@@ -16,6 +14,8 @@ services:
 
   spark-analyzer:
     build: .
+    working_dir: /app
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     environment:
@@ -41,6 +41,7 @@ services:
 
   celery-worker:
     build: .
+    working_dir: /app
     command: celery -A backend.celery_app worker --loglevel=info
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}

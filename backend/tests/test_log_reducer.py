@@ -9,7 +9,7 @@ import json
 import zipfile
 import pytest
 
-from services.log_reducer import (
+from backend.services.log_reducer import (
     LogReducer,
     EventLoaderHandler,
     AppMetaHandler,
@@ -18,7 +18,7 @@ from services.log_reducer import (
     MarkdownRenderer,
     JsonRenderer,
 )
-from models.job import AppSummary, StageMetrics
+from backend.models.job import AppSummary, StageMetrics
 
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────

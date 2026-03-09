@@ -4,7 +4,7 @@ Celery App Configuration
 Initializes Celery with Redis as broker and result backend.
 """
 from celery import Celery
-from utils.config import get_settings
+from backend.utils.config import get_settings
 
 settings = get_settings()
 
