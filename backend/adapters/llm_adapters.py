@@ -76,13 +76,29 @@ class AnthropicAdapter(BaseLLMAdapter):
         return message.content[0].text
 
 
+class GeminiAdapter(BaseLLMAdapter):
+    MODEL = "gemini-3-flash-preview"
+
+    def __init__(self, api_key: str):
+        try:
+            import google.generativeai as genai  # type: ignore
+        except ImportError as e:
+            raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai") from e
+        genai.configure(api_key=api_key)
+        self._model = genai.GenerativeModel(self.MODEL)
+
+    def _complete(self, prompt: str) -> str:
+        response = self._model.generate_content(prompt)
+        return response.text
+
+
 class NoOpAdapter(BaseLLMAdapter):
     """Used when no LLM provider is configured — returns a polite notice."""
 
     def _complete(self, prompt: str) -> str:
         return (
             "⚠️ **LLM analysis not configured.**\n\n"
-            "Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in your environment, "
+            "Set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` in your environment, "
             "or supply an API key via the web form."
         )
 
@@ -118,6 +134,8 @@ class LLMClientFactory:
                 return OpenAIAdapter(api_key)
             case "anthropic":
                 return AnthropicAdapter(api_key)
+            case "gemini":
+                return GeminiAdapter(api_key)
             case _:
                 logger.warning("Unknown LLM provider '%s', using no-op.", provider)
                 return NoOpAdapter()

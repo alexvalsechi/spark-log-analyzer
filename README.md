@@ -177,7 +177,7 @@ If you prefer not to use OAuth2, you can still provide your API keys manually:
 
 - **OpenAI**: Set `OPENAI_API_KEY` in `.env` or paste in the web form
 - **Anthropic**: Set `ANTHROPIC_API_KEY` in `.env` or paste in the web form
-- **Google Gemini**: Not supported via BYOK (OAuth2 only)
+- **Google Gemini**: Set `GEMINI_API_KEY` in `.env` or paste in the web form
 
 **Note**: BYOK is less secure than OAuth2 as keys travel through the browser. Use OAuth2 when possible!
 

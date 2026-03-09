@@ -32,6 +32,7 @@ async def upload_log(
     compact: bool = Form(default=False),
     user_id: Optional[str] = Form(default=None),
     provider: Optional[str] = Form(default=None),
+    llm_provider: Optional[str] = Form(default=None),  # BYOK provider
     api_key: Optional[str] = Form(default=None),  # Still support legacy BYOK
     language: str = Form(default="en"),
 ):
@@ -40,13 +41,18 @@ async def upload_log(
     
     Either provide:
     - OAuth: user_id + provider (token retrieved from session)
-    - BYOK: api_key (legacy, less secure)
+    - BYOK: llm_provider + api_key (legacy, less secure)
     """
+    logger.info(f"Upload request received: filename={log_zip.filename}, size={getattr(log_zip, 'size', 'unknown')}")
+    
     if not log_zip.filename.endswith(".zip"):
+        logger.error(f"Invalid file extension: {log_zip.filename}")
         raise HTTPException(status_code=422, detail="log_zip must be a .zip file")
 
     job_id = str(uuid.uuid4())
     _jobs[job_id] = JobResult(job_id=job_id, status=JobStatus.PENDING)
+    
+    logger.info(f"Created job {job_id} for user {user_id} with provider {provider}")
 
     # Read file bytes
     zip_bytes = await log_zip.read()
@@ -61,8 +67,8 @@ async def upload_log(
         py_files=py_files,
         compact=compact,
         user_id=user_id,  # OAuth user ID
-        provider=provider,  # OAuth provider
-        api_key=api_key,  # Fallback BYOK
+        provider=provider or llm_provider,  # OAuth provider or BYOK provider
+        api_key=api_key,  # BYOK API key
         language=language,
     )
     _jobs[job_id].task_id = task.id  # Store Celery task ID
@@ -94,7 +100,9 @@ def get_status(job_id: str):
             job.status = JobStatus.DONE
             job.reduced_report = result["reduced_report"]
             job.llm_analysis = result["llm_analysis"]
-            # TODO: Deserialize summary if needed
+            if result.get("summary"):
+                from backend.models.job import AppSummary
+                job.summary = AppSummary(**result["summary"])
         elif task_result.state == "FAILURE":
             job.status = JobStatus.ERROR
             job.error = str(task_result.info)

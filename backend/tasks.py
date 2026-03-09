@@ -42,6 +42,9 @@ def process_log_task(
     1. OAuth token (if user_id + provider supplied)
     2. BYOK api_key (legacy fallback)
     """
+    logger.info(f"Starting task {self.request.id} with zip_bytes size: {len(zip_bytes)}")
+    logger.info(f"Parameters: compact={compact}, user_id={user_id}, provider={provider}, api_key={'***' if api_key else None}")
+    
     service = get_job_service()
     
     # Resolve API key: prefer OAuth token
@@ -65,6 +68,9 @@ def process_log_task(
         api_key=resolved_api_key,
         language=language,
     )
+    
+    logger.info(f"Task {self.request.id} completed. Summary: {result.summary is not None}, Report length: {len(result.reduced_report)}, Analysis length: {len(result.llm_analysis)}")
+    
     return {
         "reduced_report": result.reduced_report,
         "llm_analysis": result.llm_analysis,

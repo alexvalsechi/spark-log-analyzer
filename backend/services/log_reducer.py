@@ -29,19 +29,28 @@ logger = logging.getLogger(__name__)
 
 def _iter_events(zip_bytes: bytes) -> Iterator[dict]:
     """Yield parsed JSON events from every file inside the ZIP."""
+    logger.info(f"Processing ZIP with {len(zip_bytes)} bytes")
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+        file_count = 0
+        event_count = 0
         for name in zf.namelist():
             if name.endswith("/"):
                 continue
+            file_count += 1
+            logger.debug(f"Processing file: {name}")
             with zf.open(name) as fh:
                 for raw_line in fh:
                     line = raw_line.strip()
                     if not line:
                         continue
                     try:
-                        yield json.loads(line)
-                    except json.JSONDecodeError:
+                        event = json.loads(line)
+                        event_count += 1
+                        yield event
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Skipping malformed JSON line in {name}: {e}")
                         pass  # skip malformed lines
+        logger.info(f"Processed {file_count} files, yielded {event_count} events")
 
 
 # ─── Chain of Responsibility ──────────────────────────────────────────────────
