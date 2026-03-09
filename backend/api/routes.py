@@ -119,7 +119,11 @@ def download_report(job_id: str, format: str):
 
     tmp = Path("/tmp") / f"{job_id}.{format}"
     if format == "md":
-        tmp.write_text(job.reduced_report or "")
+        # Combine reduced report and LLM analysis
+        content = job.reduced_report or ""
+        if job.llm_analysis and job.llm_analysis.strip():
+            content += "\n\n---\n\n## AI Analysis\n\n" + job.llm_analysis
+        tmp.write_text(content)
         media = "text/markdown"
     elif format == "json":
         import json
@@ -129,3 +133,9 @@ def download_report(job_id: str, format: str):
         raise HTTPException(status_code=400, detail="format must be md or json")
 
     return FileResponse(str(tmp), media_type=media, filename=f"spark_report_{job_id}.{format}")
+
+
+@router.get("/health")
+def health_check():
+    """Simple health check endpoint."""
+    return {"status": "healthy"}
