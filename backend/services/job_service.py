@@ -10,7 +10,6 @@ import logging
 from typing import Optional
 
 from backend.models.job import JobResult, JobStatus
-from backend.services.log_reducer import LogReducer
 from backend.services.llm_analyzer import LLMAnalyzer
 from backend.utils.config import get_settings
 
@@ -21,15 +20,13 @@ settings = get_settings()
 class JobService:
     def __init__(
         self,
-        reducer: Optional[LogReducer] = None,
         analyzer: Optional[LLMAnalyzer] = None,
     ):
-        self._reducer = reducer
         self._analyzer = analyzer or LLMAnalyzer()
 
-    def process(
+    def process_reduced(
         self,
-        zip_bytes: bytes,
+        reduced_report: str,
         py_files: dict[str, bytes],
         compact: bool = False,
         llm_provider: Optional[str] = None,
@@ -40,14 +37,10 @@ class JobService:
         provider = llm_provider or settings.llm_provider
         key = api_key or settings.llm_api_key
 
-        logger.info("Starting log reduction (compact=%s)…", compact)
-        reducer = self._reducer or LogReducer(output_format="md", compact=compact)
-        summary, reduced_report = reducer.reduce(zip_bytes)
-
-        logger.info("Starting LLM analysis (provider=%s)…", provider)
+        logger.info("Starting LLM analysis from pre-reduced log (provider=%s, compact=%s)…", provider, compact)
         llm_analysis = self._analyzer.analyze(
             reduced_report=reduced_report,
-            summary=summary,
+            summary=None,
             py_files=py_files,
             provider=provider,
             api_key=key,
@@ -57,7 +50,7 @@ class JobService:
         return JobResult(
             job_id="",  # filled by route layer
             status=JobStatus.DONE,
-            summary=summary,
+            summary=None,
             reduced_report=reduced_report,
             llm_analysis=llm_analysis,
         )

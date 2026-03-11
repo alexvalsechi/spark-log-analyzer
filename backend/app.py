@@ -3,14 +3,16 @@ Spark Log Analyzer — FastAPI entrypoint.
 Applies: Dependency Injection, clean controller delegation.
 """
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
 
 from .api.routes import router
 from .oauth_routes import router as oauth_router
@@ -53,5 +55,15 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 app.include_router(oauth_router, prefix="/api")
 
-# Serve the SPA frontend
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+
+
+@app.get("/", include_in_schema=False)
+def landing_page():
+    return FileResponse(FRONTEND_DIR / "sprklogs-landing.html")
+
+
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
+
