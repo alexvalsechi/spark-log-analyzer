@@ -26,9 +26,6 @@ services:
       - CORS_ORIGINS=["*"]
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      # Hot-reload frontend without rebuilding
-      - ./frontend:/app/frontend:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
@@ -49,8 +46,6 @@ services:
       - LLM_PROVIDER=${LLM_PROVIDER:-}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      - ./frontend:/app/frontend:ro
     restart: unless-stopped
     depends_on:
       redis:

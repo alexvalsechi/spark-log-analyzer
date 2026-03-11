@@ -7,7 +7,7 @@ try:
     from .celery_app import celery_app
 except ImportError:
     from celery_app import celery_app
-from backend.services.job_service import JobService, get_job_service
+from backend.services.job_service import get_job_service
 from backend.auth import TokenManager
 import redis as redis_lib
 from backend.utils.config import get_settings
@@ -26,9 +26,9 @@ except Exception as e:
 
 
 @celery_app.task(bind=True)
-def process_log_task(
+def process_reduced_task(
     self,
-    zip_bytes: bytes,
+    reduced_report: str,
     py_files: dict[str, bytes],
     compact: bool,
     user_id: str | None = None,
@@ -36,41 +36,47 @@ def process_log_task(
     api_key: str | None = None,
     language: str = "en",
 ):
-    """Async task to process Spark log ZIP and return results.
-    
-    Retrieves LLM API key either from:
-    1. OAuth token (if user_id + provider supplied)
-    2. BYOK api_key (legacy fallback)
-    """
-    logger.info(f"Starting task {self.request.id} with zip_bytes size: {len(zip_bytes)}")
-    logger.info(f"Parameters: compact={compact}, user_id={user_id}, provider={provider}, api_key={'***' if api_key else None}")
-    
+    """Async task to process a pre-reduced report and run only LLM analysis."""
+    logger.info("Starting reduced task %s with report length: %s", self.request.id, len(reduced_report))
+    logger.info(
+        "Parameters: compact=%s, user_id=%s, provider=%s, api_key=%s",
+        compact,
+        user_id,
+        provider,
+        "***" if api_key else None,
+    )
+
     service = get_job_service()
-    
+
     # Resolve API key: prefer OAuth token
     resolved_api_key = api_key
     resolved_provider = provider
-    
+
     if user_id and provider and token_manager:
         try:
             token_data = token_manager.get_token(user_id, provider)
             if token_data:
                 resolved_api_key = token_data.get("access_token")
-                logger.info(f"Using OAuth token for {user_id}:{provider}")
+                logger.info("Using OAuth token for %s:%s", user_id, provider)
         except Exception as e:
-            logger.error(f"Failed to retrieve OAuth token: {e}")
-    
-    result = service.process(
-        zip_bytes=zip_bytes,
+            logger.error("Failed to retrieve OAuth token: %s", e)
+
+    result = service.process_reduced(
+        reduced_report=reduced_report,
         py_files=py_files,
         compact=compact,
         llm_provider=resolved_provider,
         api_key=resolved_api_key,
         language=language,
     )
-    
-    logger.info(f"Task {self.request.id} completed. Summary: {result.summary is not None}, Report length: {len(result.reduced_report)}, Analysis length: {len(result.llm_analysis)}")
-    
+
+    logger.info(
+        "Reduced task %s completed. Report length: %s, Analysis length: %s",
+        self.request.id,
+        len(result.reduced_report or ""),
+        len(result.llm_analysis or ""),
+    )
+
     return {
         "reduced_report": result.reduced_report,
         "llm_analysis": result.llm_analysis,
