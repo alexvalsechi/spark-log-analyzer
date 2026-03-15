@@ -16,6 +16,10 @@ extraResources:
     to: backend
     filter:
       - "**/*"
+  - from: main/scripts
+    to: scripts
+    filter:
+      - "*.py"
 win:
   icon: renderer/features/spark-analyzer/web-app-manifest-512x512.png
   target:
