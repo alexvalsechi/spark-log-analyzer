@@ -12,10 +12,22 @@ import argparse
 import sys
 from pathlib import Path
 
-# Ensure project root is importable when script is executed directly by Electron.
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+# Ensure the directory that contains the 'backend' package is on sys.path.
+# Walk up the directory tree so the same script works both when installed
+# (resources/scripts/ → resources/ → backend/) and in the dev repo
+# (apps/desktop/main/scripts/ → … → project_root/ → backend/).
+_backend_root = next(
+    (p for p in Path(__file__).resolve().parents if (p / "backend" / "__init__.py").is_file()),
+    None,
+)
+if _backend_root is None:
+    raise ImportError(
+        "Cannot locate the 'backend' package.  "
+        "In the packaged app, ensure electron-builder copies backend/ under "
+        "resources/.  In dev, run from the project root."
+    )
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
 
 from backend.services.log_reducer import LogReducer
 

@@ -135,10 +135,13 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
   ipcMain.handle('compressFile', async (_event: IpcMainInvokeEvent, filePath: string) => {
     const originalSize = (await fs.stat(filePath)).size
     const outputPath = path.join(os.tmpdir(), `spark_reduced_${Date.now()}.md`)
+    const compressScriptPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'scripts', 'reduce_log.py')
+      : path.join(__dirname, '../scripts/reduce_log.py')
 
     await runFile(
       'python',
-      [path.join(__dirname, '../scripts/reduce_log.py'), '--zip', filePath, '--out', outputPath],
+      [compressScriptPath, '--zip', filePath, '--out', outputPath],
       path.resolve(__dirname, '../../../..'),
     )
 
