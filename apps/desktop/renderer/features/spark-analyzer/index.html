@@ -1382,7 +1382,12 @@ function getApiBaseUrl() {
   return DEFAULT_API_BASE_URL;
 }
 
-const API_BASE_URL = getApiBaseUrl();
+let API_BASE_URL = getApiBaseUrl();
+// Resolve the real backend URL from main process (dynamic port) as soon as possible.
+// This overwrites the default http://localhost:8000 fallback before any user interaction.
+if (window.api && typeof window.api.getBackendUrl === 'function') {
+  window.api.getBackendUrl().then(function(url) { if (url) API_BASE_URL = url; }).catch(function() {});
+}
 
 function apiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;

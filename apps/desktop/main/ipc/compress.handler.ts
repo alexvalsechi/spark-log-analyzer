@@ -69,8 +69,12 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
     return { reducedReport, summary }
   })
 
+  ipcMain.handle('get-backend-url', async () => pyBaseUrl)
+
   ipcMain.handle('submit-reduced-for-analysis', async (_event: IpcMainInvokeEvent, payload: SubmitPayload) => {
-    const apiBaseUrl = payload?.apiBaseUrl || pyBaseUrl
+    // Always use the locally-managed backend URL — do NOT trust the renderer-supplied
+    // apiBaseUrl which defaults to http://localhost:8000 and would point at the wrong port.
+    const apiBaseUrl = pyBaseUrl
     const reducedReport = payload?.reducedReport
     const pyFilePaths = payload?.pyFilePaths || []
     const llmProvider = payload?.llmProvider

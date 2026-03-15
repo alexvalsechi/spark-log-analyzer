@@ -5,6 +5,7 @@ export interface IpcApi {
   login: (credentials: { email: string; password: string }) => Promise<{ token: string }>
   logout: () => Promise<void>
   getSession: () => Promise<{ user: { id: string; email: string } } | null>
+  getBackendUrl: () => Promise<string>
 
   reduceZipLocally: (payload: { zipPath: string; compact?: boolean }) => Promise<{ reducedReport: string; summary: unknown | null }>
   submitReducedForAnalysis: (payload: {
