@@ -11,7 +11,8 @@
     "check": "node -e \"require('./package.json'); console.log('desktop package ok')\"",
     "pack:win": "npm run build && electron-builder --win --dir",
     "pack:win:debug": "npm run build && electron-builder --win --dir -c.win.signAndEditExecutable=false",
-    "dist:win": "npm run build && electron-builder --win nsis --publish never"
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
+    "dist:win:local": "npm run build && electron-builder --win nsis --publish never -c.win.signAndEditExecutable=false"
   },
   "dependencies": {
     "@log-sparkui/ipc-types": "*"

@@ -16,6 +16,13 @@ extraResources:
     to: backend
     filter:
       - "**/*"
+  - from: ../../backend
+    to: backend
+    filter:
+      - "**/*.py"
+      - "!__pycache__/**"
+      - "!tests/**"
+      - "!.pytest_cache/**"
   - from: main/scripts
     to: scripts
     filter:
