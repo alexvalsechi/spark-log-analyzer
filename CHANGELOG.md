@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.4](https://github.com/alexvalsechi/spark-log-analyzer/compare/v0.2.3...v0.2.4) (2026-03-15)
+
+
+### Bug Fixes
+
+* simplify release token validation and fallback to GITHUB_TOKEN ([4bb744a](https://github.com/alexvalsechi/spark-log-analyzer/commit/4bb744a47506d57468d30f27ce2ce15c187402ef))
+* simplify release token validation and fallback to GITHUB_TOKEN ([b910130](https://github.com/alexvalsechi/spark-log-analyzer/commit/b9101301a4918919c01cbce12ac83007a292c6b9))
+* update release-please workflow to validate release token and use correct secret for publishing ([26040ee](https://github.com/alexvalsechi/spark-log-analyzer/commit/26040ee677d4235deba17ebfc20275c158528811))
+* update release-please workflow to validate release token and use… ([566be64](https://github.com/alexvalsechi/spark-log-analyzer/commit/566be6475bfc41b75a4ef67e7149a1d0d771ec22))
+
 ## [0.2.3](https://github.com/alexvalsechi/spark-log-analyzer/compare/v0.2.2...v0.2.3) (2026-03-15)
 
 
