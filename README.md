@@ -47,10 +47,7 @@ This repository now uses a trunk-based release flow on GitHub Actions.
 
 ### Workflows
 
-- `.github/workflows/ci.yml`: Pull request quality gate.
-- `.github/workflows/release-please.yml`: Semantic version + changelog automation.
-- `.github/workflows/build-desktop.yml`: Windows NSIS installer generation for semantic tags and rolling `master-latest` publishing on `main`/`master` pushes.
-- `.github/workflows/deploy-web.yml`: Deploys `apps/web/` static files to GitHub Pages on `main`/`master` pushes.
+- `.github/workflows/pipeline.yml`: Unified workflow with parallel jobs for PR quality gate, release-please automation, `master-latest` desktop build, versioned release asset publishing, Python backend multi-OS build (when backend paths change), and GitHub Pages deployment.
 
 ### GitHub Pages setup (one-time)
 

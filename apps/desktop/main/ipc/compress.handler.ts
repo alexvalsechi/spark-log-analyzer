@@ -49,7 +49,9 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
     }
 
     const outputFile = path.join(os.tmpdir(), `spark_reduced_${Date.now()}.md`)
-    const scriptPath = path.join(__dirname, '../scripts/reduce_log.py')
+    const scriptPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'scripts', 'reduce_log.py')
+      : path.join(__dirname, '../scripts/reduce_log.py')
     const workspaceRoot = path.resolve(__dirname, '../../../..')
 
     const { stdout } = await runFile('python', [scriptPath, '--zip', zipPath, '--out', outputFile, ...(compact ? ['--compact'] : [])], workspaceRoot)
