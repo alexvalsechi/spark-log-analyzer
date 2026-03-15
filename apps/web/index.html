@@ -1200,6 +1200,12 @@ footer {
     });
   }
 
+  function findExeAsset(release) {
+    return (release?.assets || []).find((asset) =>
+      typeof asset.name === 'string' && asset.name.toLowerCase().endsWith('.exe')
+    );
+  }
+
   async function hydrateExeLinks() {
     const repoInfo = detectPagesRepository();
     if (!repoInfo) {
@@ -1207,27 +1213,57 @@ footer {
       return;
     }
 
-    const releaseApi = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/releases/tags/master-latest`;
+    const releaseApi = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/releases?per_page=20`;
     try {
       const res = await fetch(releaseApi, {
         headers: { Accept: 'application/vnd.github+json' }
       });
       if (!res.ok) {
-        throw new Error(`release lookup failed (${res.status})`);
+        throw new Error(`releases lookup failed (${res.status})`);
       }
 
-      const release = await res.json();
-      const exeAsset = (release.assets || []).find((asset) =>
-        typeof asset.name === 'string' && asset.name.toLowerCase().endsWith('.exe')
-      );
+      const releases = await res.json();
+      const latestReleaseWithExe = (releases || []).find((release) => {
+        if (!release || release.draft) {
+          return false;
+        }
+        return !!findExeAsset(release);
+      });
 
-      if (exeAsset && exeAsset.browser_download_url) {
-        setExeLinks('Baixar instalador .exe', exeAsset.browser_download_url, false);
-      } else {
-        setExeLinks('Abrir release desktop', release.html_url, false);
+      if (latestReleaseWithExe) {
+        const exeAsset = findExeAsset(latestReleaseWithExe);
+        if (exeAsset?.browser_download_url) {
+          setExeLinks('Baixar instalador .exe', exeAsset.browser_download_url, false);
+          return;
+        }
+
+        if (latestReleaseWithExe.html_url) {
+          setExeLinks('Abrir release desktop', latestReleaseWithExe.html_url, false);
+          return;
+        }
       }
+
+      // Fallback to the rolling release when no .exe was found in recent releases.
+      const fallbackTagApi = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/releases/tags/master-latest`;
+      const fallbackRes = await fetch(fallbackTagApi, {
+        headers: { Accept: 'application/vnd.github+json' }
+      });
+      if (fallbackRes.ok) {
+        const fallbackRelease = await fallbackRes.json();
+        const fallbackExe = findExeAsset(fallbackRelease);
+        if (fallbackExe?.browser_download_url) {
+          setExeLinks('Baixar instalador .exe', fallbackExe.browser_download_url, false);
+          return;
+        }
+        if (fallbackRelease?.html_url) {
+          setExeLinks('Abrir release desktop', fallbackRelease.html_url, false);
+          return;
+        }
+      }
+
+      setExeLinks('Abrir release desktop', `https://github.com/${repoInfo.owner}/${repoInfo.repo}/releases`, false);
     } catch {
-      setExeLinks('Abrir release desktop', `https://github.com/${repoInfo.owner}/${repoInfo.repo}/releases/tag/master-latest`, false);
+      setExeLinks('Abrir release desktop', `https://github.com/${repoInfo.owner}/${repoInfo.repo}/releases`, false);
     }
   }
 

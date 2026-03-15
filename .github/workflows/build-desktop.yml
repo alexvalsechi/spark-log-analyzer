@@ -5,9 +5,15 @@ on:
     branches:
       - main
       - master
-    tags:
-      - "v*"
+  release:
+    types:
+      - published
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional version tag to publish assets into (example: v0.2.4)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -15,10 +21,13 @@ permissions:
 jobs:
   build-windows-exe:
     name: Build Windows installer
+    if: github.event_name == 'push' || (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -30,8 +39,9 @@ jobs:
       - name: Sync desktop version with release tag
         shell: bash
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#v}"
+          TAG_NAME="${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag || github.ref_name }}"
+          if [[ "$TAG_NAME" == v* ]]; then
+            VERSION="${TAG_NAME#v}"
             npm version "$VERSION" --no-git-tag-version --workspace @log-sparkui/desktop
           fi
 
@@ -170,6 +180,15 @@ jobs:
       - name: Build NSIS installer
         run: npm run dist:win --workspace @log-sparkui/desktop
 
+      - name: Validate installer presence
+        shell: powershell
+        run: |
+          $installers = Get-ChildItem -Path apps/desktop/dist -Filter *.exe -Recurse
+          if (-not $installers -or $installers.Count -eq 0) {
+            Write-Error "No .exe installer generated under apps/desktop/dist"; exit 1
+          }
+          $installers | Select-Object FullName, Length
+
       - name: Generate SHA256 checksums
         shell: powershell
         run: |
@@ -204,10 +223,12 @@ jobs:
             apps/desktop/dist/checksums.txt
 
       - name: Publish release assets
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')) || (github.event_name == 'workflow_dispatch' && startsWith(github.event.inputs.release_tag, 'v'))
         uses: softprops/action-gh-release@b25b93d384199fc0fc8c2e126b2d937a0cbeb2ae
         with:
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             apps/desktop/dist/*.exe
             apps/desktop/dist/checksums.txt
