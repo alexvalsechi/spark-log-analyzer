@@ -67,6 +67,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = ROOT_DIR / "apps" / "web"
 if not FRONTEND_DIR.exists():
     FRONTEND_DIR = ROOT_DIR / "frontend"
+HAS_FRONTEND = FRONTEND_DIR.exists() and (FRONTEND_DIR / "index.html").exists()
 
 
 def parse_args():
@@ -77,10 +78,13 @@ def parse_args():
 
 @app.get("/", include_in_schema=False)
 def landing_page():
-    return FileResponse(FRONTEND_DIR / "index.html")
+    if HAS_FRONTEND:
+        return FileResponse(FRONTEND_DIR / "index.html")
+    return {"status": "ok", "service": "spark-log-analyzer-backend"}
 
 
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+if HAS_FRONTEND:
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 
 if __name__ == "__main__":

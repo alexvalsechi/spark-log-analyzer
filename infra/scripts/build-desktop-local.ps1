@@ -1,6 +1,7 @@
 param(
   [switch]$SkipInstall,
-  [switch]$SkipDist
+  [switch]$SkipDist,
+  [switch]$DebugUnpacked
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,9 +13,34 @@ Set-Location $repoRoot
 
 Write-Host "Repo root: $repoRoot"
 
+$pythonCmd = "python"
+try {
+  $null = & py -3.11 --version
+  if ($LASTEXITCODE -eq 0) {
+    $pythonCmd = "py -3.11"
+  }
+} catch {
+  # Keep default python command when Python launcher is unavailable.
+}
+
+Write-Host "Using Python command: $pythonCmd"
+
 if (-not $SkipInstall) {
   Write-Host "Running npm ci..."
   npm ci
+  if ($LASTEXITCODE -ne 0) {
+    throw "npm ci failed"
+  }
+}
+
+Write-Host "Building Python backend executable..."
+Invoke-Expression "$pythonCmd -m pip install --upgrade pip"
+Invoke-Expression "$pythonCmd -m pip install pyinstaller -r backend/requirements.txt"
+New-Item -ItemType Directory -Path "apps/desktop/resources/backend" -Force | Out-Null
+Invoke-Expression "$pythonCmd -m PyInstaller backend/app.py --onefile --name server --collect-submodules celery --distpath apps/desktop/resources/backend --workpath '$env:TEMP/pyinstaller-build' --specpath '$env:TEMP/pyinstaller-spec'"
+
+if (-not (Test-Path "apps/desktop/resources/backend/server.exe")) {
+  throw "Missing apps/desktop/resources/backend/server.exe"
 }
 
 function Ensure-FromNpmTarball {
@@ -119,6 +145,34 @@ node -e "const fs=require('fs'); const p7='node_modules/7zip-bin/win/x64/7za.exe
 if (-not $SkipDist) {
   Write-Host "Running desktop dist build..."
   npm run dist:win --workspace @log-sparkui/desktop
+  if ($LASTEXITCODE -ne 0) {
+    throw "desktop dist build failed"
+  }
+}
+
+if ($DebugUnpacked) {
+  Write-Host "Running desktop unpacked build for runtime debug..."
+  npm run pack:win:debug --workspace @log-sparkui/desktop
+  if ($LASTEXITCODE -ne 0) {
+    throw "desktop unpacked debug build failed"
+  }
+
+  $unpackedDir = "apps/desktop/dist/win-unpacked"
+  $backendExe = Join-Path $unpackedDir "resources/backend/server.exe"
+  if (-not (Test-Path $backendExe)) {
+    throw "Missing packaged backend executable at $backendExe"
+  }
+
+  $desktopExe = Get-ChildItem -Path $unpackedDir -Filter *.exe |
+    Where-Object { $_.Name -notlike "*unins*" } |
+    Select-Object -First 1
+
+  if (-not $desktopExe) {
+    throw "No desktop executable found in $unpackedDir"
+  }
+
+  Write-Host "Starting unpacked app: $($desktopExe.FullName)"
+  Start-Process -FilePath $desktopExe.FullName -WorkingDirectory $unpackedDir
 }
 
 Write-Host "Done."

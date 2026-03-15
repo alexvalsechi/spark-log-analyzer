@@ -11,6 +11,11 @@ files:
   - resources/**/*
   - package.json
   - electron-builder.yml
+extraResources:
+  - from: resources/backend
+    to: backend
+    filter:
+      - "**/*"
 win:
   target:
     - target: nsis
