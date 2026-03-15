@@ -7,6 +7,7 @@ const api: IpcApi = {
   login: (credentials) => ipcRenderer.invoke('login', credentials),
   logout: () => ipcRenderer.invoke('logout'),
   getSession: () => ipcRenderer.invoke('getSession'),
+  getBackendUrl: () => ipcRenderer.invoke('get-backend-url'),
   reduceZipLocally: (payload) => ipcRenderer.invoke('reduce-zip-locally', payload),
   submitReducedForAnalysis: (payload) => ipcRenderer.invoke('submit-reduced-for-analysis', payload),
   saveReportToDisk: (payload) => ipcRenderer.invoke('save-report-to-disk', payload),
