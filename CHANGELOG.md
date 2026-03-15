@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/alexvalsechi/sprklogs/compare/v0.3.1...v0.4.0) (2026-03-15)
+
+
+### Features
+
+* implement dynamic backend URL resolution in IPC handlers and fr… ([040ac0b](https://github.com/alexvalsechi/sprklogs/commit/040ac0bdc0071e9466b6f71ab5903d8751a77aa3))
+* implement dynamic backend URL resolution in IPC handlers and frontend ([28172c5](https://github.com/alexvalsechi/sprklogs/commit/28172c5b57698237cf27ed87f19236d523909a30))
+
 ## [0.3.1](https://github.com/alexvalsechi/sprklogs/compare/v0.3.0...v0.3.1) (2026-03-15)
 
 
