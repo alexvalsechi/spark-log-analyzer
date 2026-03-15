@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.2](https://github.com/alexvalsechi/spark-log-analyzer/compare/v0.2.1...v0.2.2) (2026-03-15)
+
+
+### Bug Fixes
+
+* add Python backend build and validation steps to CI workflow ([009dfd2](https://github.com/alexvalsechi/spark-log-analyzer/commit/009dfd2aba003874f2c305b41027c37f67078c60))
+* add Python backend build and validation steps to CI workflow ([df82f4d](https://github.com/alexvalsechi/spark-log-analyzer/commit/df82f4d30ad5ffeb15d1c7aa145ece3b7ef335d7))
+* enhance build scripts and configurations for Python backend and desktop packaging ([b6e462c](https://github.com/alexvalsechi/spark-log-analyzer/commit/b6e462c172db8af1807bb6f5f0791ac1313396d8))
+
 ## [0.2.1](https://github.com/alexvalsechi/spark-log-analyzer/compare/v0.2.0...v0.2.1) (2026-03-15)
 
 
