@@ -3,10 +3,10 @@ Celery Tasks
 =============
 Defines async tasks for log processing.
 """
-try:
-    from .celery_app import celery_app
-except ImportError:
+if __package__ in (None, ""):
     from celery_app import celery_app
+else:
+    from .celery_app import celery_app
 from backend.services.job_service import get_job_service
 from backend.api.routes.auth import TokenManager
 import redis as redis_lib

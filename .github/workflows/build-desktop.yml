@@ -52,6 +52,7 @@ jobs:
           pyinstaller backend/app.py `
             --onefile `
             --name server `
+            --collect-submodules celery `
             --distpath apps/desktop/resources/backend `
             --workpath "$env:RUNNER_TEMP/pyinstaller-build" `
             --specpath "$env:RUNNER_TEMP/pyinstaller-spec"

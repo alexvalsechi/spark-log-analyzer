@@ -12,6 +12,7 @@ echo "[build-python] Building executable..."
 pyinstaller "$ROOT/backend/app.py" \
   --onefile \
   --name server \
+  --collect-submodules celery \
   --distpath "$OUT" \
   --workpath /tmp/pyinstaller-build \
   --specpath /tmp/pyinstaller-spec
