@@ -5,18 +5,20 @@ on:
     branches: [main, master]
   push:
     branches: [main, master]
-    paths:
-      - 'backend/**'
-      - 'apps/**'
-      - 'infra/scripts/build-python.sh'
-      - 'release-please-config.json'
-      - '.release-please-manifest.json'
-      - '.github/workflows/pipeline.yml'
   release:
     types:
       - published
   workflow_dispatch:
     inputs:
+      release_as:
+        description: "Optional forced version for release-please PR (example: 0.2.4)"
+        required: false
+        type: string
+      source_ref:
+        description: "Git ref used for manual build/publish (branch, tag or SHA). Default: master"
+        required: false
+        default: "master"
+        type: string
       release_tag:
         description: "Optional version tag to publish assets into (example: v0.2.4)"
         required: false
@@ -127,7 +129,7 @@ jobs:
 
   release-please:
     name: Release Please
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_as != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -139,6 +141,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          release-as: ${{ github.event.inputs.release_as }}
 
   build-python:
     name: Build Python backend (${{ matrix.os }})
@@ -552,7 +555,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
+          # In manual runs, the tag may not exist yet. Build from source_ref and
+          # publish artifacts into the requested release_tag.
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.source_ref }}
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -708,6 +714,7 @@ jobs:
         uses: softprops/action-gh-release@b25b93d384199fc0fc8c2e126b2d937a0cbeb2ae
         with:
           tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || github.event.inputs.release_tag }}
+          target_commitish: ${{ github.event_name == 'release' && github.sha || github.event.inputs.source_ref }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
