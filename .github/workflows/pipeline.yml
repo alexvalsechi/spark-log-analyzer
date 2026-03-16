@@ -5,11 +5,13 @@ on:
     branches: [main, master]
   push:
     branches: [main, master]
-    paths-ignore:
-      - '**.md'
-      - '.env.example'
-      - '.gitignore'
-      - 'docs/**'
+    paths:
+      - '**'
+      - '!**/*.md'
+      - 'apps/desktop/**/*.md'
+      - '!docs/**'
+      - '!.env.example'
+      - '!.gitignore'
   release:
     types:
       - published
@@ -42,6 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       backend_changed: ${{ steps.filter.outputs.backend }}
+      desktop_runtime_changed: ${{ steps.filter.outputs.desktop_runtime }}
+      desktop_docs_release_changed: ${{ steps.filter.outputs.desktop_docs_release }}
       release_please_branch: ${{ steps.branch.outputs.is_release_please_branch }}
     steps:
       - name: Checkout
@@ -65,6 +69,19 @@ jobs:
             backend:
               - 'backend/**'
               - 'infra/scripts/build-python.sh'
+              - 'infra/scripts/build-python.ps1'
+            desktop_runtime:
+              - 'apps/desktop/**'
+              - '!apps/desktop/**/*.md'
+              - 'backend/**'
+              - 'packages/ipc-types/**'
+              - 'packages/ui/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'infra/scripts/build-python.sh'
+              - 'infra/scripts/build-python.ps1'
+            desktop_docs_release:
+              - 'apps/desktop/**/*.md'
 
   backend-tests:
     name: Backend tests
@@ -134,19 +151,44 @@ jobs:
 
   release-please:
     name: Release Please
-    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_as != '')
+    needs: detect-changes
+    if: ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) && (needs.detect-changes.outputs.desktop_runtime_changed == 'true' || needs.detect-changes.outputs.desktop_docs_release_changed == 'true')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.release_as != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Determine release strategy
+        id: release_meta
+        shell: bash
+        run: |
+          MANUAL_RELEASE_AS="${{ github.event.inputs.release_as }}"
+          if [[ -n "$MANUAL_RELEASE_AS" ]]; then
+            echo "release_as=$MANUAL_RELEASE_AS" >> "$GITHUB_OUTPUT"
+            echo "mode=manual" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${{ needs.detect-changes.outputs.desktop_docs_release_changed }}" == "true" && "${{ needs.detect-changes.outputs.desktop_runtime_changed }}" != "true" ]]; then
+            NEXT_PATCH=$(node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('.release-please-manifest.json','utf8')); const current=manifest['.']; if (!current) throw new Error('Missing root version in .release-please-manifest.json'); const parts=current.split('.').map(Number); if (parts.length !== 3 || parts.some(Number.isNaN)) throw new Error('Invalid semver: ' + current); parts[2] += 1; process.stdout.write(parts.join('.'));")
+            echo "release_as=$NEXT_PATCH" >> "$GITHUB_OUTPUT"
+            echo "mode=desktop-docs-patch" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "release_as=" >> "$GITHUB_OUTPUT"
+          echo "mode=conventional" >> "$GITHUB_OUTPUT"
+
       - name: Run release-please
         uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          release-as: ${{ github.event.inputs.release_as }}
+          release-as: ${{ steps.release_meta.outputs.release_as }}
 
   build-python:
     name: Build Python backend (${{ matrix.os }})
@@ -177,7 +219,8 @@ jobs:
 
   build-desktop-master-latest:
     name: Build desktop master latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: detect-changes
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && (needs.detect-changes.outputs.desktop_runtime_changed == 'true' || needs.detect-changes.outputs.desktop_docs_release_changed == 'true')
     runs-on: windows-latest
     permissions:
       contents: write
