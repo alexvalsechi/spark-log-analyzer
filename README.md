@@ -13,11 +13,12 @@
       <img src="https://img.shields.io/badge/Visit%20Website-SprkLogs-0ea5e9?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Visit Website" />
     </a>
   </p>
+
   <p>
-<a href="https://github.com/alexvalsechi/sprklogs" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:#21262d;color:#e6edf3;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #30363d;text-decoration:none;">
-  &#9733; Star no GitHub
-</a>
-      </p>
+  <a href="https://github.com/alexvalsechi/sprklogs">
+    <img src="https://img.shields.io/badge/⭐%20Star%20no%20GitHub-21262d?style=for-the-badge&logo=github&logoColor=white" alt="Star no GitHub" />
+  </a>
+</p>
 </div>
 
 
