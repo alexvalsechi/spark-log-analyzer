@@ -197,16 +197,7 @@ jobs:
 
       - name: Build Python backend executable
         shell: powershell
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller -r backend/requirements.txt
-          New-Item -ItemType Directory -Path apps/desktop/resources/backend -Force | Out-Null
-          pyinstaller backend/app.py `
-            --onefile `
-            --name server `
-            --distpath apps/desktop/resources/backend `
-            --workpath "$env:RUNNER_TEMP/pyinstaller-build" `
-            --specpath "$env:RUNNER_TEMP/pyinstaller-spec"
+        run: ./infra/scripts/build-python.ps1
 
       - name: Validate backend executable presence
         shell: powershell
@@ -320,6 +311,16 @@ jobs:
       - name: Build NSIS installer
         run: npm run dist:win --workspace @log-sparkui/desktop
 
+      - name: Validate packaged backend is binary-only
+        shell: powershell
+        run: |
+          $sourceFiles = Get-ChildItem -Path apps/desktop/dist/win-unpacked/resources/backend -Recurse -Include *.py -ErrorAction SilentlyContinue
+          if ($sourceFiles) {
+            $listed = ($sourceFiles | ForEach-Object { $_.FullName }) -join "`n"
+            Write-Error "Packaged backend contains Python source files:`n$listed"
+            exit 1
+          }
+
       - name: Generate SHA256 checksums
         shell: powershell
         run: |
@@ -378,16 +379,7 @@ jobs:
 
       - name: Build Python backend executable
         shell: powershell
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller -r backend/requirements.txt
-          New-Item -ItemType Directory -Path apps/desktop/resources/backend -Force | Out-Null
-          pyinstaller backend/app.py `
-            --onefile `
-            --name server `
-            --distpath apps/desktop/resources/backend `
-            --workpath "$env:RUNNER_TEMP/pyinstaller-build" `
-            --specpath "$env:RUNNER_TEMP/pyinstaller-spec"
+        run: ./infra/scripts/build-python.ps1
 
       - name: Ensure electron-builder native binaries
         shell: powershell
@@ -493,6 +485,16 @@ jobs:
 
       - name: Build NSIS installer
         run: npm run dist:win --workspace @log-sparkui/desktop
+
+      - name: Validate packaged backend is binary-only
+        shell: powershell
+        run: |
+          $sourceFiles = Get-ChildItem -Path apps/desktop/dist/win-unpacked/resources/backend -Recurse -Include *.py -ErrorAction SilentlyContinue
+          if ($sourceFiles) {
+            $listed = ($sourceFiles | ForEach-Object { $_.FullName }) -join "`n"
+            Write-Error "Packaged backend contains Python source files:`n$listed"
+            exit 1
+          }
 
       - name: Upload PR preview artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -584,16 +586,7 @@ jobs:
 
       - name: Build Python backend executable
         shell: powershell
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller -r backend/requirements.txt
-          New-Item -ItemType Directory -Path apps/desktop/resources/backend -Force | Out-Null
-          pyinstaller backend/app.py `
-            --onefile `
-            --name server `
-            --distpath apps/desktop/resources/backend `
-            --workpath "$env:RUNNER_TEMP/pyinstaller-build" `
-            --specpath "$env:RUNNER_TEMP/pyinstaller-spec"
+        run: ./infra/scripts/build-python.ps1
 
       - name: Ensure electron-builder native binaries
         shell: powershell
@@ -699,6 +692,16 @@ jobs:
 
       - name: Build NSIS installer
         run: npm run dist:win --workspace @log-sparkui/desktop
+
+      - name: Validate packaged backend is binary-only
+        shell: powershell
+        run: |
+          $sourceFiles = Get-ChildItem -Path apps/desktop/dist/win-unpacked/resources/backend -Recurse -Include *.py -ErrorAction SilentlyContinue
+          if ($sourceFiles) {
+            $listed = ($sourceFiles | ForEach-Object { $_.FullName }) -join "`n"
+            Write-Error "Packaged backend contains Python source files:`n$listed"
+            exit 1
+          }
 
       - name: Generate SHA256 checksums
         shell: powershell

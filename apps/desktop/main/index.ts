@@ -56,7 +56,7 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   try {
     pyBaseUrl = await startPython()
-    console.log('[main] Python running at', pyBaseUrl)
+    console.log('[main] Local backend running at', pyBaseUrl)
     registerAllHandlers(pyBaseUrl)
     createWindow()
   } catch (error) {

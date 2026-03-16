@@ -13,6 +13,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from backend.models.job import JobResult, JobStatus
+from backend.services.log_reducer import LogReducer
 from backend.services.local_job_runner import LocalReducedJobRunner
 from backend.utils.config import get_settings
 
@@ -25,6 +26,33 @@ limiter = Limiter(key_func=get_remote_address)
 # In-memory job store (replace with Redis for production)
 _jobs: dict[str, JobResult] = {}
 _local_runner = LocalReducedJobRunner()
+
+
+@router.post("/reduce-local", response_model=dict)
+@limiter.limit("20/hour")
+async def reduce_local_zip(
+    request: Request,
+    zip_file: UploadFile = File(..., description="Spark event log ZIP"),
+    compact: bool = Form(default=False),
+):
+    """Reduce a local ZIP and return summary + markdown report synchronously."""
+    if not zip_file.filename or not zip_file.filename.lower().endswith(".zip"):
+        raise HTTPException(status_code=422, detail="zip_file must be a .zip")
+
+    zip_bytes = await zip_file.read()
+    if not zip_bytes:
+        raise HTTPException(status_code=422, detail="zip_file is empty")
+
+    try:
+        reducer = LogReducer(output_format="md", compact=compact)
+        summary, reduced_report = reducer.reduce(zip_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return {
+        "summary": summary.model_dump(),
+        "reduced_report": reduced_report,
+    }
 
 
 @router.post("/upload-reduced", response_model=dict, status_code=202)

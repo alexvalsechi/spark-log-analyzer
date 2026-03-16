@@ -2,7 +2,6 @@ const { app, dialog, ipcMain } = require('electron')
 import fs from 'fs/promises'
 import os from 'os'
 import path from 'path'
-import { execFile } from 'child_process'
 
 type IpcMainInvokeEvent = unknown
 
@@ -27,16 +26,32 @@ type SavePayload = {
   suggestedName?: string
 }
 
-function runFile(command: string, args: string[], cwd: string): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    execFile(command, args, { cwd }, (error, stdout, stderr) => {
-      if (error) {
-        reject(new Error(`Command failed: ${stderr || error.message}`))
-        return
-      }
-      resolve({ stdout, stderr })
-    })
+type ReduceResponse = {
+  reduced_report: string
+  summary: unknown
+}
+
+async function reduceZipViaBackend(apiBaseUrl: string, zipPath: string, compact: boolean): Promise<ReduceResponse> {
+  const zipFileBuffer = await fs.readFile(zipPath)
+  const fileName = path.basename(zipPath) || 'spark-events.zip'
+
+  const form = new FormData()
+  form.append('zip_file', new Blob([zipFileBuffer]), fileName)
+  if (compact) {
+    form.append('compact', 'true')
+  }
+
+  const res = await fetch(`${apiBaseUrl}/api/reduce-local`, {
+    method: 'POST',
+    body: form,
   })
+
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`reduce-local failed (${res.status}): ${errText}`)
+  }
+
+  return (await res.json()) as ReduceResponse
 }
 
 export function registerCompressHandlers(pyBaseUrl: string): void {
@@ -48,25 +63,11 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
       throw new Error('zipPath is required')
     }
 
-    const outputFile = path.join(os.tmpdir(), `spark_reduced_${Date.now()}.md`)
-    const scriptPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'scripts', 'reduce_log.py')
-      : path.join(__dirname, '../scripts/reduce_log.py')
-    const workspaceRoot = path.resolve(__dirname, '../../../..')
-
-    const { stdout } = await runFile('python', [scriptPath, '--zip', zipPath, '--out', outputFile, ...(compact ? ['--compact'] : [])], workspaceRoot)
-
-    const reducedReport = await fs.readFile(outputFile, 'utf-8')
-    await fs.unlink(outputFile).catch(() => {})
-
-    let summary: unknown = null
-    try {
-      summary = JSON.parse(stdout.trim())
-    } catch {
-      summary = null
+    const reduced = await reduceZipViaBackend(pyBaseUrl, zipPath, compact)
+    return {
+      reducedReport: reduced.reduced_report,
+      summary: reduced.summary ?? null,
     }
-
-    return { reducedReport, summary }
   })
 
   ipcMain.handle('get-backend-url', async () => pyBaseUrl)
@@ -140,15 +141,8 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
   ipcMain.handle('compressFile', async (_event: IpcMainInvokeEvent, filePath: string) => {
     const originalSize = (await fs.stat(filePath)).size
     const outputPath = path.join(os.tmpdir(), `spark_reduced_${Date.now()}.md`)
-    const compressScriptPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'scripts', 'reduce_log.py')
-      : path.join(__dirname, '../scripts/reduce_log.py')
-
-    await runFile(
-      'python',
-      [compressScriptPath, '--zip', filePath, '--out', outputPath],
-      path.resolve(__dirname, '../../../..'),
-    )
+    const reduced = await reduceZipViaBackend(pyBaseUrl, filePath, false)
+    await fs.writeFile(outputPath, reduced.reduced_report, 'utf-8')
 
     const outputSize = (await fs.stat(outputPath)).size
     return {
