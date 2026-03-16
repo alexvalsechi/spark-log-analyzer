@@ -3,7 +3,7 @@
 This MVP implements the first hybrid desktop flow:
 
 1. User selects a local `.zip` event log (400MB+ supported based on machine capacity).
-2. Electron executes local Python reducer (`apps/desktop/main/scripts/reduce_log.py`).
+2. Electron calls the bundled local backend (`server.exe`) to reduce the ZIP.
 3. App sends only the reduced report plus optional `.py` files to backend API (`/api/upload-reduced`).
 4. Backend runs LLM analysis asynchronously.
 
@@ -17,6 +17,6 @@ npm start
 
 ## Notes
 
-- Python must be available on PATH as `python`.
-- Backend is expected at `http://localhost:8000` by default.
-- ZIP file is never uploaded to backend in this desktop flow.
+- End users do not need Python installed. The desktop installer bundles `server.exe`.
+- Python is required only for local development (`npm start`) because dev mode runs `python -m backend.app`.
+- ZIP file never leaves the local machine in the reduction step; only the reduced report is sent for analysis.

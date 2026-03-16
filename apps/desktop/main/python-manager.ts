@@ -58,34 +58,20 @@ export async function startPython(): Promise<string> {
     }
 
     const packagedBackendRoot = path.join(resourcesPath, 'backend')
-    const packagedPyEntrypoint = path.join(packagedBackendRoot, 'app.py')
     const packagedExe = path.join(packagedBackendRoot, packagedBin)
 
-    const candidates: BackendLaunchConfig[] = []
-
-    // Prefer Python source backend when available. This keeps local packaged builds
-    // aligned with current backend code and avoids stale server.exe regressions.
-    if (fs.existsSync(packagedPyEntrypoint)) {
-      candidates.push({
-        command: 'python',
-        args: ['-m', 'backend.app', '--port', String(pyPort)],
-        cwd: resourcesPath,
-      })
+    if (!fs.existsSync(packagedExe)) {
+      throw new Error(`Bundled backend executable not found at ${packagedExe}`)
     }
 
-    if (fs.existsSync(packagedExe)) {
-      candidates.push({
-        command: packagedExe,
-        args: ['--port', String(pyPort)],
-      })
-    }
-
-    return candidates
+    // In packaged mode we only allow the bundled executable to guarantee
+    // end users do not need Python installed on their machine.
+    return [{ command: packagedExe, args: ['--port', String(pyPort)] }]
   }
 
   const candidates = resolveLaunchCandidates()
   if (candidates.length === 0) {
-    throw new Error('No bundled backend launcher found (expected backend Python files or server executable).')
+    throw new Error('No backend launcher candidates found.')
   }
 
   const errors: string[] = []
