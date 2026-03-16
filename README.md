@@ -15,6 +15,11 @@
   </p>
 </div>
 
+<a href="https://github.com/alexvalsechi/sprklogs" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:#21262d;color:#e6edf3;font-size:13px;font-weight:600;border-radius:8px;border:1.5px solid #30363d;text-decoration:none;">
+  &#9733; Star no GitHub
+</a>
+
+
 ---
 
 Spark production logs can reach 1 GB. Sending that directly to an LLM blows up the context window or generates an absurd token bill. **SprkLogs processes the log locally first** — extracting and compressing only what matters — then sends a lean diagnostic report to the LLM of your choice.
