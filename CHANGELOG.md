@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/alexvalsechi/sprklogs/compare/v0.6.0...v0.7.0) (2026-03-16)
+
+
+### Features
+
+* update demo section in README with GIF and remove video ([cf69040](https://github.com/alexvalsechi/sprklogs/commit/cf690409de7f346a49233996e64e2d4743653371))
+* update demo section in README with GIF and remove video ([e25dbef](https://github.com/alexvalsechi/sprklogs/commit/e25dbef514fd4326580ee73208b6ad5ecea779e3))
+
 ## [0.6.0](https://github.com/alexvalsechi/sprklogs/compare/v0.5.0...v0.6.0) (2026-03-15)
 
 
