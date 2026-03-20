@@ -1,3 +1,8 @@
+export interface ReduceProgressData {
+  percent: number
+  stage: string
+}
+
 export interface IpcApi {
   compressFile: (filePath: string) => Promise<{ outputPath: string; savedBytes: number }>
   getCompressionStatus: (jobId: string) => Promise<{ status: 'pending' | 'running' | 'done' | 'error'; progress: number }>
@@ -20,6 +25,10 @@ export interface IpcApi {
     language?: string
   }) => Promise<unknown>
   saveReportToDisk: (payload: { content: string; suggestedName?: string }) => Promise<{ saved: boolean; filePath?: string }>
+
+  /** Subscribe to reduction progress events from the main process.
+   *  Returns an unsubscribe function. */
+  onReduceProgress: (callback: (event: unknown, data: ReduceProgressData) => void) => () => void
 }
 
 export type IpcChannel = keyof IpcApi

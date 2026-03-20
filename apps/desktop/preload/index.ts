@@ -12,6 +12,10 @@ const api: IpcApi = {
   reduceZipLocally: (payload) => ipcRenderer.invoke('reduce-zip-locally', payload),
   submitReducedForAnalysis: (payload) => ipcRenderer.invoke('submit-reduced-for-analysis', payload),
   saveReportToDisk: (payload) => ipcRenderer.invoke('save-report-to-disk', payload),
+  onReduceProgress: (callback) => {
+    ipcRenderer.on('reduce-progress', callback)
+    return () => ipcRenderer.removeListener('reduce-progress', callback)
+  },
 }
 
 contextBridge.exposeInMainWorld('api', api)
@@ -19,11 +23,12 @@ contextBridge.exposeInMainWorld('desktopApi', {
   reduceZipLocally: api.reduceZipLocally,
   submitReducedForAnalysis: api.submitReducedForAnalysis,
   saveReportToDisk: api.saveReportToDisk,
+  onReduceProgress: api.onReduceProgress,
 })
 
 declare global {
   interface Window {
     api: IpcApi
-    desktopApi: Pick<IpcApi, 'reduceZipLocally' | 'submitReducedForAnalysis' | 'saveReportToDisk'>
+    desktopApi: Pick<IpcApi, 'reduceZipLocally' | 'submitReducedForAnalysis' | 'saveReportToDisk' | 'onReduceProgress'>
   }
 }
