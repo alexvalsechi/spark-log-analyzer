@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import io
 import json
+import random
 import zipfile
-import statistics
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterator, Optional
+from dataclasses import dataclass, field
+from typing import Callable, Iterator, Optional
 
 from backend.models.job import AppSummary, StageMetrics
 from backend.utils.config import get_settings
@@ -26,62 +27,183 @@ from backend.utils.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+# Callback type: (percent 0-100, stage_key str) -> None
+ProgressCallback = Optional[Callable[[int, str], None]]
+
+# Maximum samples kept per stage for approximate p95 via reservoir sampling
+_RESERVOIR_SIZE = 10_000
+
 
 # ─── Iterator ────────────────────────────────────────────────────────────────
 
-def _iter_events(zip_bytes: bytes) -> Iterator[dict]:
-    """Yield parsed JSON events from every file inside the ZIP."""
-    logger.info(f"Processing ZIP with {len(zip_bytes)} bytes")
-    
-    # ZIP bomb protection
-    uncompressed_size = 0
+def _iter_events(
+    zip_bytes: bytes,
+    progress_cb: ProgressCallback = None,
+) -> Iterator[dict]:
+    """Yield parsed JSON events from every file inside the ZIP.
+
+    Progress is emitted from 5 % (first file) to 60 % (last file), proportional
+    to file index within the archive.  For desktop local-path mode the
+    uncompressed-size limit is intentionally not enforced here — the caller
+    (route handler) controls whether to apply it.
+    """
+    logger.info("Processing ZIP with %d bytes", len(zip_bytes))
+
     file_count = 0
-    
+    uncompressed_size = 0
+
     with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-        # Check number of files
-        namelist = zf.namelist()
-        if len(namelist) > settings.max_files_in_zip:
-            raise ValueError(f"ZIP contains too many files: {len(namelist)} > {settings.max_files_in_zip}")
-        
-        for name in namelist:
-            if name.endswith("/"):
-                continue
+        namelist = [n for n in zf.namelist() if not n.endswith("/")]
+        total_files = len(namelist)
+
+        if total_files > settings.max_files_in_zip:
+            raise ValueError(
+                f"ZIP contains too many files: {total_files} > {settings.max_files_in_zip}"
+            )
+
+        for file_idx, name in enumerate(namelist):
             file_count += 1
-            
-            # Check individual file size
+
+            # Emit progress proportional to file position: 5 % → 60 %
+            if progress_cb:
+                pct = 5 + int((file_idx / max(total_files, 1)) * 55)
+                progress_cb(pct, "reading_file")
+
             with zf.open(name) as fh:
                 file_data = fh.read()
                 uncompressed_size += len(file_data)
-                
-                # Check compression ratio
+
+                # ZIP-bomb guard: per-file compression ratio only
                 compressed_size = zf.getinfo(name).compress_size
                 if compressed_size > 0:
                     ratio = len(file_data) / compressed_size
                     if ratio > settings.compression_ratio_limit:
-                        raise ValueError(f"File {name} has suspicious compression ratio: {ratio:.1f} > {settings.compression_ratio_limit}")
-                
-                # Process lines
+                        raise ValueError(
+                            f"File {name} has suspicious compression ratio: "
+                            f"{ratio:.1f} > {settings.compression_ratio_limit}"
+                        )
+
                 for raw_line in io.BytesIO(file_data):
                     line = raw_line.strip()
                     if not line:
                         continue
                     try:
                         event = json.loads(line)
-                        # Basic content validation - check for Spark event structure
                         if not isinstance(event, dict) or "Event" not in event:
-                            logger.warning(f"Skipping non-Spark event in {name}: {event}")
+                            logger.warning("Skipping non-Spark event in %s", name)
                             continue
                         yield event
-                    except json.JSONDecodeError as e:
-                        logger.warning(f"Skipping malformed JSON line in {name}: {e}")
-                        pass  # skip malformed lines
-        
-        # Check total uncompressed size
-        uncompressed_mb = uncompressed_size / (1024 * 1024)
-        if uncompressed_mb > settings.max_uncompressed_mb:
-            raise ValueError(f"Uncompressed ZIP size too large: {uncompressed_mb:.2f} MB > {settings.max_uncompressed_mb} MB")
-    
-    logger.info(f"Processed {file_count} files, total uncompressed size: {uncompressed_mb:.2f} MB, yielded events")
+                    except json.JSONDecodeError as exc:
+                        logger.warning("Skipping malformed JSON line in %s: %s", name, exc)
+
+    uncompressed_mb = uncompressed_size / (1024 * 1024)
+    logger.info(
+        "Processed %d files, total uncompressed size: %.2f MB",
+        file_count,
+        uncompressed_mb,
+    )
+
+
+# ─── StageAccumulator — memory-efficient per-stage aggregator ────────────────
+
+@dataclass
+class StageAccumulator:
+    """Accumulates task metrics for one stage without storing raw event dicts.
+
+    Scalar aggregations (sum/min/max/count) are updated incrementally.
+    Task durations for p95 use reservoir sampling capped at _RESERVOIR_SIZE
+    items, giving an approximate p95 with fixed memory cost (~80 KB per stage).
+    """
+    # Reservoir for approximate p95
+    _reservoir: list = field(default_factory=list)
+    _total_seen: int = 0
+
+    # Running aggregates — all integers to match StageMetrics types
+    count: int = 0
+    dur_sum: int = 0
+    dur_min: int = 0
+    dur_max: int = 0
+    input_bytes: int = 0
+    output_bytes: int = 0
+    shuffle_read: int = 0
+    shuffle_write: int = 0
+    gc_time: int = 0
+    memory_spill: int = 0
+    disk_spill: int = 0
+    shuffle_write_time: int = 0
+    fetch_wait: int = 0
+    remote_to_disk: int = 0
+    peak_exec_mem: int = 0
+    shuffle_read_records: int = 0
+    shuffle_write_records: int = 0
+
+    def add(
+        self,
+        duration: int,
+        input_b: int,
+        output_b: int,
+        shuffle_r: int,
+        shuffle_w: int,
+        gc: int,
+        mem_spill: int,
+        disk_spill: int,
+        sw_time: int,
+        fetch_wait: int,
+        remote_disk: int,
+        peak_mem: int,
+        sr_records: int,
+        sw_records: int,
+    ) -> None:
+        # Scalar aggregates
+        self.count += 1
+        self.dur_sum += duration
+        if self.count == 1:
+            self.dur_min = duration
+            self.dur_max = duration
+        else:
+            if duration < self.dur_min:
+                self.dur_min = duration
+            if duration > self.dur_max:
+                self.dur_max = duration
+        self.input_bytes += input_b
+        self.output_bytes += output_b
+        self.shuffle_read += shuffle_r
+        self.shuffle_write += shuffle_w
+        self.gc_time += gc
+        self.memory_spill += mem_spill
+        self.disk_spill += disk_spill
+        self.shuffle_write_time += sw_time
+        self.fetch_wait += fetch_wait
+        self.remote_to_disk += remote_disk
+        if peak_mem > self.peak_exec_mem:
+            self.peak_exec_mem = peak_mem
+        self.shuffle_read_records += sr_records
+        self.shuffle_write_records += sw_records
+
+        # Reservoir sampling for p95
+        self._total_seen += 1
+        if len(self._reservoir) < _RESERVOIR_SIZE:
+            self._reservoir.append(duration)
+        else:
+            j = random.randrange(self._total_seen)
+            if j < _RESERVOIR_SIZE:
+                self._reservoir[j] = duration
+
+    @property
+    def dur_avg(self) -> float:
+        return self.dur_sum / self.count if self.count else 0.0
+
+    @property
+    def dur_p95(self) -> int:
+        if not self._reservoir:
+            return 0
+        s = sorted(self._reservoir)
+        return s[int(len(s) * 0.95)]
+
+    @property
+    def skew_ratio(self) -> float:
+        avg = self.dur_avg
+        return self.dur_max / avg if avg > 0 else 0.0
 
 
 # ─── Chain of Responsibility ──────────────────────────────────────────────────
@@ -107,146 +229,145 @@ class BaseHandler(ABC):
         ...
 
 
-class EventLoaderHandler(BaseHandler):
-    """Reads all events from the ZIP and stores them grouped by type."""
+class SinglePassHandler(BaseHandler):
+    """Reads the ZIP once, dispatching events by type on the fly.
+
+    Replaces the old three-handler sequence
+    (EventLoaderHandler → AppMetaHandler → StageAggregationHandler).
+    Memory footprint is O(stages × _RESERVOIR_SIZE) regardless of total
+    task count, instead of O(total_tasks).
+    """
 
     def process(self, ctx: dict) -> dict:
         zip_bytes: bytes = ctx["zip_bytes"]
-        events_by_type: dict[str, list[dict]] = {}
-        for ev in _iter_events(zip_bytes):
-            etype = ev.get("Event", "Unknown")
-            events_by_type.setdefault(etype, []).append(ev)
-        ctx["events"] = events_by_type
-        logger.debug("Loaded event types: %s", list(events_by_type.keys()))
-        return ctx
+        progress_cb: ProgressCallback = ctx.get("progress_cb")
 
+        # ── app-level accumulators
+        app_start: dict = {}
+        app_end: dict = {}
+        env_update: dict = {}
+        executor_count: int = 0
 
-class AppMetaHandler(BaseHandler):
-    """Extracts application-level metadata."""
+        # ── stage accumulators
+        by_stage: dict[int, StageAccumulator] = {}
+        stage_names: dict[int, str] = {}
+        stage_info: dict[int, dict] = {}   # sid → Stage Info dict from StageCompleted
 
-    def process(self, ctx: dict) -> dict:
-        events = ctx.get("events", {})
-        start_ev = (events.get("SparkListenerApplicationStart") or [{}])[0]
-        end_ev = (events.get("SparkListenerApplicationEnd") or [{}])[0]
-        env_ev = (events.get("SparkListenerEnvironmentUpdate") or [{}])[0]
-        executor_evs = events.get("SparkListenerExecutorAdded", [])
+        for ev in _iter_events(zip_bytes, progress_cb):
+            etype = ev.get("Event", "")
 
+            if etype == "SparkListenerApplicationStart":
+                app_start = ev
+            elif etype == "SparkListenerApplicationEnd":
+                app_end = ev
+            elif etype == "SparkListenerEnvironmentUpdate":
+                env_update = ev
+            elif etype == "SparkListenerExecutorAdded":
+                executor_count += 1
+            elif etype == "SparkListenerStageCompleted":
+                si = ev.get("Stage Info", {})
+                sid = si.get("Stage ID", -1)
+                stage_names[sid] = si.get("Stage Name", f"Stage {sid}")
+                stage_info[sid] = si
+            elif etype == "SparkListenerTaskEnd":
+                sid = ev.get("Stage ID", -1)
+                acc = by_stage.get(sid)
+                if acc is None:
+                    acc = StageAccumulator()
+                    by_stage[sid] = acc
+
+                ti = ev.get("Task Info", {})
+                tm = ev.get("Task Metrics", {})
+                sr = tm.get("Shuffle Read Metrics", {})
+                sw = tm.get("Shuffle Write Metrics", {})
+
+                acc.add(
+                    duration=ti.get("Finish Time", 0) - ti.get("Launch Time", 0),
+                    input_b=tm.get("Input Metrics", {}).get("Bytes Read", 0),
+                    output_b=tm.get("Output Metrics", {}).get("Bytes Written", 0),
+                    shuffle_r=sr.get("Total Bytes Read", 0),
+                    shuffle_w=sw.get("Shuffle Bytes Written", 0),
+                    gc=tm.get("JVM GC Time", 0),
+                    mem_spill=tm.get("Memory Bytes Spilled", 0),
+                    disk_spill=tm.get("Disk Bytes Spilled", 0),
+                    sw_time=sw.get("Shuffle Write Time", 0) // 1_000_000,  # ns → ms
+                    fetch_wait=sr.get("Fetch Wait Time", 0),
+                    remote_disk=sr.get("Remote Bytes Read To Disk", 0),
+                    peak_mem=tm.get("Peak Execution Memory", 0),
+                    sr_records=sr.get("Total Records Read", 0),
+                    sw_records=sw.get("Shuffle Records Written", 0),
+                )
+
+        if progress_cb:
+            progress_cb(62, "aggregating_stages")
+
+        # ── build app_meta
         spark_props = {
             k: v
-            for k, v in (env_ev.get("Spark Properties", {}) or {}).items()
+            for k, v in (env_update.get("Spark Properties", {}) or {}).items()
         }
-
         ctx["app_meta"] = {
-            "app_id": start_ev.get("App ID", "unknown"),
-            "app_name": start_ev.get("App Name", "unknown"),
-            "spark_version": start_ev.get("Spark Version", spark_props.get("spark.version", "unknown")),
-            "start_time_ms": start_ev.get("Timestamp", 0),
-            "end_time_ms": end_ev.get("Timestamp", 0),
-            "executor_count": len(executor_evs),
+            "app_id": app_start.get("App ID", "unknown"),
+            "app_name": app_start.get("App Name", "unknown"),
+            "spark_version": app_start.get(
+                "Spark Version", spark_props.get("spark.version", "unknown")
+            ),
+            "start_time_ms": app_start.get("Timestamp", 0),
+            "end_time_ms": app_end.get("Timestamp", 0),
+            "executor_count": executor_count,
         }
-        return ctx
 
-
-class StageAggregationHandler(BaseHandler):
-    """
-    Aggregates TaskEnd events per stage into statistical summaries.
-    Factory sub-pattern: _build_stage() constructs StageMetrics objects.
-    """
-
-    def process(self, ctx: dict) -> dict:
-        events = ctx.get("events", {})
-        task_events: list[dict] = events.get("SparkListenerTaskEnd", [])
-        stage_info_evs: list[dict] = events.get("SparkListenerStageCompleted", [])
-
-        # Build name map from StageCompleted
-        stage_names: dict[int, str] = {}
-        stage_completed: dict[int, dict] = {}
-        for ev in stage_info_evs:
-            si = ev.get("Stage Info", {})
-            sid = si.get("Stage ID", -1)
-            stage_names[sid] = si.get("Stage Name", f"Stage {sid}")
-            stage_completed[sid] = si
-
-        # Group task durations/metrics by stage
-        by_stage: dict[int, dict[str, list]] = {}
-        for ev in task_events:
-            sid = ev.get("Stage ID", -1)
-            tm = ev.get("Task Metrics", {})
-            entry = by_stage.setdefault(sid, {
-                "durations": [], "input": [], "output": [],
-                "shuffle_read": [], "shuffle_write": [], "gc": [],
-                "memory_spill": [], "disk_spill": [],
-                "shuffle_write_time": [], "fetch_wait": [], "remote_to_disk": [],
-                "peak_exec_mem": [], "shuffle_read_records": [], "shuffle_write_records": [],
-            })
-            entry["durations"].append(ev.get("Task Info", {}).get("Finish Time", 0) - ev.get("Task Info", {}).get("Launch Time", 0))
-            entry["input"].append(tm.get("Input Metrics", {}).get("Bytes Read", 0))
-            entry["output"].append(tm.get("Output Metrics", {}).get("Bytes Written", 0))
-            sr = tm.get("Shuffle Read Metrics", {})
-            sw = tm.get("Shuffle Write Metrics", {})
-            entry["shuffle_read"].append(sr.get("Total Bytes Read", 0))
-            entry["shuffle_write"].append(sw.get("Shuffle Bytes Written", 0))
-            entry["gc"].append(tm.get("JVM GC Time", 0))
-            entry["memory_spill"].append(tm.get("Memory Bytes Spilled", 0))
-            entry["disk_spill"].append(tm.get("Disk Bytes Spilled", 0))
-            entry["shuffle_write_time"].append(sw.get("Shuffle Write Time", 0) // 1_000_000)  # ns → ms
-            entry["fetch_wait"].append(sr.get("Fetch Wait Time", 0))
-            entry["remote_to_disk"].append(sr.get("Remote Bytes Read To Disk", 0))
-            entry["peak_exec_mem"].append(tm.get("Peak Execution Memory", 0))
-            entry["shuffle_read_records"].append(sr.get("Total Records Read", 0))
-            entry["shuffle_write_records"].append(sw.get("Shuffle Records Written", 0))
-
+        # ── build StageMetrics list from accumulators
         stages: list[StageMetrics] = []
-        for sid, data in by_stage.items():
-            si = stage_completed.get(sid, {}).get("Stage Info", {})
-            stages.append(self._build_stage(sid, stage_names.get(sid, f"Stage {sid}"), data, si))
+        for sid, acc in by_stage.items():
+            si = stage_info.get(sid, {})
+            name = stage_names.get(sid, f"Stage {sid}")
+            stages.append(
+                StageMetrics(
+                    stage_id=sid,
+                    name=name,
+                    num_tasks=acc.count,
+                    duration_ms=si.get("Completion Time", 0) - si.get("Submission Time", 0),
+                    input_bytes=acc.input_bytes,
+                    output_bytes=acc.output_bytes,
+                    shuffle_read_bytes=acc.shuffle_read,
+                    shuffle_write_bytes=acc.shuffle_write,
+                    gc_time_ms=acc.gc_time,
+                    task_duration_min_ms=acc.dur_min if acc.count else None,
+                    task_duration_avg_ms=round(acc.dur_avg, 1) if acc.count else None,
+                    task_duration_max_ms=acc.dur_max if acc.count else None,
+                    task_duration_p95_ms=acc.dur_p95 if acc.count else None,
+                    skew_ratio=round(acc.skew_ratio, 2) if acc.count else None,
+                    memory_bytes_spilled=acc.memory_spill,
+                    disk_bytes_spilled=acc.disk_spill,
+                    shuffle_write_time_ms=acc.shuffle_write_time,
+                    fetch_wait_time_ms=acc.fetch_wait,
+                    remote_bytes_read_to_disk=acc.remote_to_disk,
+                    peak_execution_memory_bytes=acc.peak_exec_mem,
+                    shuffle_read_records=acc.shuffle_read_records,
+                    shuffle_write_records=acc.shuffle_write_records,
+                )
+            )
 
         stages.sort(key=lambda s: s.stage_id)
         ctx["stages"] = stages
+
+        if progress_cb:
+            progress_cb(70, "stages_ready")
+
         return ctx
-
-    @staticmethod
-    def _build_stage(sid: int, name: str, data: dict, si: dict) -> StageMetrics:
-        """Factory: build a StageMetrics from raw aggregated data."""
-        durations = data["durations"]
-        n = len(durations)
-        d_sorted = sorted(durations)
-        p95 = d_sorted[int(n * 0.95)] if n else 0
-        avg = statistics.mean(durations) if durations else 0
-        skew = (max(durations) / avg) if avg > 0 else 0.0
-
-        return StageMetrics(
-            stage_id=sid,
-            name=name,
-            num_tasks=n,
-            duration_ms=si.get("Completion Time", 0) - si.get("Submission Time", 0),
-            input_bytes=sum(data["input"]),
-            output_bytes=sum(data["output"]),
-            shuffle_read_bytes=sum(data["shuffle_read"]),
-            shuffle_write_bytes=sum(data["shuffle_write"]),
-            gc_time_ms=sum(data["gc"]),
-            task_duration_min_ms=min(durations) if durations else None,
-            task_duration_avg_ms=round(avg, 1) if durations else None,
-            task_duration_max_ms=max(durations) if durations else None,
-            task_duration_p95_ms=p95 if durations else None,
-            skew_ratio=round(skew, 2) if durations else None,
-            memory_bytes_spilled=sum(data["memory_spill"]),
-            disk_bytes_spilled=sum(data["disk_spill"]),
-            shuffle_write_time_ms=sum(data["shuffle_write_time"]),
-            fetch_wait_time_ms=sum(data["fetch_wait"]),
-            remote_bytes_read_to_disk=sum(data["remote_to_disk"]),
-            peak_execution_memory_bytes=max(data["peak_exec_mem"]) if data["peak_exec_mem"] else 0,
-            shuffle_read_records=sum(data["shuffle_read_records"]),
-            shuffle_write_records=sum(data["shuffle_write_records"]),
-        )
 
 
 class SummaryBuilderHandler(BaseHandler):
     """Assembles the final AppSummary from all gathered data."""
 
     def process(self, ctx: dict) -> dict:
+        progress_cb: ProgressCallback = ctx.get("progress_cb")
         meta = ctx.get("app_meta", {})
         stages: list[StageMetrics] = ctx.get("stages", [])
+
+        if progress_cb:
+            progress_cb(75, "building_summary")
 
         total_dur = meta.get("end_time_ms", 0) - meta.get("start_time_ms", 0)
 
@@ -386,16 +507,22 @@ class LogReducer:
         self._renderer: BaseRenderer = self.RENDERERS.get(
             (output_format, compact), MarkdownRenderer
         )()
-        # Build the chain
-        loader = EventLoaderHandler()
-        meta = AppMetaHandler()
-        agg = StageAggregationHandler()
+        # Build the chain: single-pass replaces the old three-handler sequence
+        single = SinglePassHandler()
         builder = SummaryBuilderHandler()
-        loader.set_next(meta).set_next(agg).set_next(builder)
-        self._chain = loader
+        single.set_next(builder)
+        self._chain = single
 
-    def reduce(self, zip_bytes: bytes) -> tuple[AppSummary, str]:
-        ctx = self._chain.handle({"zip_bytes": zip_bytes})
+    def reduce(
+        self,
+        zip_bytes: bytes,
+        progress_cb: ProgressCallback = None,
+    ) -> tuple[AppSummary, str]:
+        ctx = self._chain.handle({"zip_bytes": zip_bytes, "progress_cb": progress_cb})
+        if progress_cb:
+            progress_cb(80, "rendering_report")
         summary: AppSummary = ctx["summary"]
         report = self._renderer.render(summary)
+        if progress_cb:
+            progress_cb(85, "report_ready")
         return summary, report

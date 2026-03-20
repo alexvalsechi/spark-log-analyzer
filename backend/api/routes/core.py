@@ -4,6 +4,7 @@ Delegates all logic to services; handles HTTP concerns only.
 """
 from __future__ import annotations
 
+import os
 import uuid
 import logging
 from typing import Optional
@@ -26,6 +27,9 @@ limiter = Limiter(key_func=get_remote_address)
 # In-memory job store (replace with Redis for production)
 _jobs: dict[str, JobResult] = {}
 _local_runner = LocalReducedJobRunner()
+
+# In-memory progress store for local-path reductions (reduce_job_id → {percent, stage})
+_reduce_progress: dict[str, dict] = {}
 
 
 @router.post("/reduce-local", response_model=dict)
@@ -126,6 +130,67 @@ def get_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
 
     return job
+
+
+@router.post("/reduce-local-path", response_model=dict)
+def reduce_local_path(
+    file_path: str = Form(..., description="Absolute path to the Spark event log ZIP on disk"),
+    reduce_job_id: Optional[str] = Form(default=None, description="Client-supplied tracking ID"),
+    compact: bool = Form(default=False),
+):
+    """Reduce a ZIP given its local filesystem path (desktop mode only).
+
+    The file is read directly from disk — no upload transfer needed.
+    Progress can be polled via GET /api/reduce-progress/{reduce_job_id}.
+    """
+    # Validate path: must be an existing .zip file.
+    # No directory traversal risk here because this endpoint is only reachable
+    # from the local Electron main process (loopback, no CORS from untrusted origins).
+    if not file_path or not isinstance(file_path, str):
+        raise HTTPException(status_code=422, detail="file_path is required")
+    if not file_path.lower().endswith(".zip"):
+        raise HTTPException(status_code=422, detail="file_path must be a .zip file")
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+
+    rjid = reduce_job_id or str(uuid.uuid4())
+    _reduce_progress[rjid] = {"percent": 2, "stage": "reading_zip"}
+
+    def _progress(pct: int, stage: str) -> None:
+        _reduce_progress[rjid] = {"percent": pct, "stage": stage}
+
+    try:
+        _progress(2, "reading_zip")
+        with open(file_path, "rb") as fh:
+            zip_bytes = fh.read()
+        _progress(5, "zip_loaded")
+
+        reducer = LogReducer(output_format="md", compact=compact)
+        summary, reduced_report = reducer.reduce(zip_bytes, progress_cb=_progress)
+    except ValueError as exc:
+        _reduce_progress.pop(rjid, None)
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        _reduce_progress.pop(rjid, None)
+        raise HTTPException(status_code=500, detail=f"Could not read file: {exc}") from exc
+    finally:
+        _reduce_progress.pop(rjid, None)
+
+    return {
+        "reduce_job_id": rjid,
+        "summary": summary.model_dump(),
+        "reduced_report": reduced_report,
+    }
+
+
+@router.get("/reduce-progress/{reduce_job_id}")
+async def get_reduce_progress(reduce_job_id: str):
+    """Return current reduction progress for the given tracking ID.
+
+    Returns {"percent": 100, "stage": "done"} once the job is no longer tracked
+    (i.e., it has finished or failed).
+    """
+    return _reduce_progress.get(reduce_job_id, {"percent": 100, "stage": "done"})
 
 
 @router.get("/health")

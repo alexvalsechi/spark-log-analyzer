@@ -2,8 +2,9 @@ const { app, dialog, ipcMain } = require('electron')
 import fs from 'fs/promises'
 import os from 'os'
 import path from 'path'
+import crypto from 'crypto'
 
-type IpcMainInvokeEvent = unknown
+type IpcMainInvokeEvent = Electron.IpcMainInvokeEvent
 
 type ReducePayload = {
   zipPath: string
@@ -29,33 +30,54 @@ type SavePayload = {
 type ReduceResponse = {
   reduced_report: string
   summary: unknown
+  reduce_job_id?: string
 }
 
-async function reduceZipViaBackend(apiBaseUrl: string, zipPath: string, compact: boolean): Promise<ReduceResponse> {
-  const zipFileBuffer = await fs.readFile(zipPath)
-  const fileName = path.basename(zipPath) || 'spark-events.zip'
-
+/** Send the ZIP path to the backend for local-disk reduction (no file transfer). */
+async function reduceZipViaPath(
+  apiBaseUrl: string,
+  zipPath: string,
+  compact: boolean,
+  reduceJobId: string,
+): Promise<ReduceResponse> {
   const form = new FormData()
-  form.append('zip_file', new Blob([zipFileBuffer]), fileName)
-  if (compact) {
-    form.append('compact', 'true')
-  }
+  form.append('file_path', zipPath)
+  form.append('reduce_job_id', reduceJobId)
+  if (compact) form.append('compact', 'true')
 
-  const res = await fetch(`${apiBaseUrl}/api/reduce-local`, {
+  const res = await fetch(`${apiBaseUrl}/api/reduce-local-path`, {
     method: 'POST',
     body: form,
   })
 
   if (!res.ok) {
     const errText = await res.text()
-    throw new Error(`reduce-local failed (${res.status}): ${errText}`)
+    throw new Error(`reduce-local-path failed (${res.status}): ${errText}`)
   }
 
   return (await res.json()) as ReduceResponse
 }
 
+/** Poll /api/reduce-progress/{id} and forward updates to the renderer. */
+function startProgressPoll(
+  apiBaseUrl: string,
+  reduceJobId: string,
+  sender: Electron.WebContents,
+): ReturnType<typeof setInterval> {
+  return setInterval(async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/reduce-progress/${reduceJobId}`)
+      if (!res.ok) return
+      const data = (await res.json()) as { percent: number; stage: string }
+      sender.send('reduce-progress', data)
+    } catch {
+      // swallow transient errors — the poll will retry
+    }
+  }, 500)
+}
+
 export function registerCompressHandlers(pyBaseUrl: string): void {
-  ipcMain.handle('reduce-zip-locally', async (_event: IpcMainInvokeEvent, payload: ReducePayload) => {
+  ipcMain.handle('reduce-zip-locally', async (event: IpcMainInvokeEvent, payload: ReducePayload) => {
     const zipPath = payload?.zipPath
     const compact = !!payload?.compact
 
@@ -63,10 +85,21 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
       throw new Error('zipPath is required')
     }
 
-    const reduced = await reduceZipViaBackend(pyBaseUrl, zipPath, compact)
-    return {
-      reducedReport: reduced.reduced_report,
-      summary: reduced.summary ?? null,
+    const reduceJobId = crypto.randomUUID()
+
+    // Start polling progress in background, forwarding events to the renderer
+    const poll = startProgressPoll(pyBaseUrl, reduceJobId, event.sender)
+
+    try {
+      const reduced = await reduceZipViaPath(pyBaseUrl, zipPath, compact, reduceJobId)
+      return {
+        reducedReport: reduced.reduced_report,
+        summary: reduced.summary ?? null,
+      }
+    } finally {
+      clearInterval(poll)
+      // Emit 100 % so the renderer progress bar reaches the end
+      try { event.sender.send('reduce-progress', { percent: 100, stage: 'report_ready' }) } catch { /* closed */ }
     }
   })
 
@@ -141,7 +174,8 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
   ipcMain.handle('compressFile', async (_event: IpcMainInvokeEvent, filePath: string) => {
     const originalSize = (await fs.stat(filePath)).size
     const outputPath = path.join(os.tmpdir(), `spark_reduced_${Date.now()}.md`)
-    const reduced = await reduceZipViaBackend(pyBaseUrl, filePath, false)
+    const reduceJobId = crypto.randomUUID()
+    const reduced = await reduceZipViaPath(pyBaseUrl, filePath, false, reduceJobId)
     await fs.writeFile(outputPath, reduced.reduced_report, 'utf-8')
 
     const outputSize = (await fs.stat(outputPath)).size

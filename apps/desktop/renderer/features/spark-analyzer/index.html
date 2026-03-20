@@ -1172,6 +1172,7 @@
     <div class="status-bar" id="status-bar">
       <div class="status-dot" id="status-dot"></div>
       <span class="status-msg" id="status-msg">Idle</span>
+      <span class="status-pct" id="status-pct" style="font-family:var(--mono);font-size:0.72rem;color:var(--accent);margin-left:6px;min-width:36px;text-align:right;"></span>
       <span class="status-elapsed" id="status-elapsed"></span>
     </div>
     <div class="progress-track" id="progress-track" style="display:none">
@@ -1296,6 +1297,7 @@ let currentLocalSummary = null;
 let currentReducedReport = null; // kept locally — never re-fetched from server
 let currentLang = 'en';
 let statusCycleTimer = null;
+let progressCleanup = null; // unsubscribe fn for onReduceProgress
 let currentSortColumn = null;
 let currentSortDirection = 'asc';
 let originalStages = [];
@@ -1839,64 +1841,79 @@ async function downloadMarkdownLocal(content, suggestedName) {
   }
 }
 
-/* ── Status step cycle ─────────────────────────────── */
-const pipelineMessages = {
-  en: [
-    'Reading ZIP file locally…',
-    'Unpacking log files…',
-    'Extracting Spark events…',
-    'Identifying stages & tasks…',
-    'Computing performance metrics…',
-    'Detecting bottlenecks & data skew…',
-    'Compressing analysis report…',
-    'Uploading reduced report…',
-    'Transferring data to server…',
-    'Preparing AI analysis context…',
-    'Sending context to LLM…',
-    'Waiting for AI response…',
-    'Analyzing stage performance…',
-    'Generating optimization suggestions…',
-    'Formatting final report…',
-  ],
-  pt: [
-    'Lendo arquivo ZIP localmente…',
-    'Descompactando arquivos de log…',
-    'Extraindo eventos do Spark…',
-    'Identificando stages e tarefas…',
-    'Calculando métricas de performance…',
-    'Detectando gargalos e skew de dados…',
-    'Comprimindo relatório de análise…',
-    'Enviando relatório reduzido…',
-    'Transferindo dados para o servidor…',
-    'Preparando contexto para análise IA…',
-    'Enviando contexto para a LLM…',
-    'Aguardando resposta da inteligência artificial…',
-    'Analisando performance dos stages…',
-    'Gerando sugestões de otimização…',
-    'Formatando relatório final…',
-  ]
+/* ── Stage message translation map ─────────────────── */
+const STAGE_MESSAGES = {
+  en: {
+    reading_zip:        'Reading ZIP file…',
+    zip_loaded:         'Unpacking events…',
+    reading_file:       'Processing log files…',
+    aggregating_stages: 'Aggregating stage metrics…',
+    stages_ready:       'Computing performance indicators…',
+    building_summary:   'Building performance summary…',
+    rendering_report:   'Generating report…',
+    report_ready:       'Reduction complete, preparing AI context…',
+    llm_queued:         'AI analysis queued…',
+    llm_analyzing:      'AI is analyzing your Spark job…',
+    complete:           'Analysis complete',
+  },
+  pt: {
+    reading_zip:        'Lendo arquivo ZIP…',
+    zip_loaded:         'Descompactando eventos…',
+    reading_file:       'Processando arquivos de log…',
+    aggregating_stages: 'Agregando métricas de stages…',
+    stages_ready:       'Calculando indicadores de performance…',
+    building_summary:   'Construindo resumo de performance…',
+    rendering_report:   'Gerando relatório…',
+    report_ready:       'Redução concluída, preparando contexto para IA…',
+    llm_queued:         'Análise IA na fila…',
+    llm_analyzing:      'IA está analisando o seu job Spark…',
+    complete:           'Análise concluída',
+  }
 };
 
+function stageMessage(stageKey) {
+  const map = STAGE_MESSAGES[currentLang] || STAGE_MESSAGES.en;
+  return map[stageKey] || stageKey;
+}
+
+/* ── Real progress handler (called by IPC reduce-progress events) ── */
+function onReduceProgress(data) {
+  const pct = typeof data.percent === 'number' ? data.percent : 0;
+  const msg = stageMessage(data.stage);
+  setRealProgress(pct, msg, 'pending');
+}
+
+function setRealProgress(pct, msg, dotStatus) {
+  const bar = document.getElementById('status-bar');
+  if (bar) bar.classList.add('visible');
+  const dot = document.getElementById('status-dot');
+  if (dot) dot.className = 'status-dot ' + (dotStatus || 'pending');
+  const el = document.getElementById('status-msg');
+  if (el) {
+    el.classList.remove('stepping');
+    void el.offsetWidth;
+    el.textContent = msg;
+  }
+  const pctEl = document.getElementById('status-pct');
+  if (pctEl) pctEl.textContent = pct + '%';
+  setProgressWidth(pct);
+}
+
+/* ── Kept for LLM phase (after reduction is done) ────── */
 function startStatusCycle(dotStatus) {
   stopStatusCycle();
-  const lang = pipelineMessages[currentLang] ? currentLang : 'en';
-  const msgs = pipelineMessages[lang];
-  let idx = 0;
   const el = document.getElementById('status-msg');
   const dot = document.getElementById('status-dot');
   const bar = document.getElementById('status-bar');
   if (bar) bar.classList.add('visible');
   if (dot) dot.className = 'status-dot ' + (dotStatus || 'pending');
-  function showStep() {
-    if (!el) return;
+  if (el) {
     el.classList.remove('stepping');
     void el.offsetWidth;
-    el.textContent = msgs[idx % msgs.length];
+    // Start with the first real-progress message that matches LLM stage
+    el.textContent = stageMessage('llm_queued');
     el.classList.add('stepping');
-    idx++;
   }
-  showStep();
-  statusCycleTimer = setInterval(showStep, 2500);
 }
 
 function stopStatusCycle() {
@@ -1924,10 +1941,10 @@ async function submitJob() {
   btn.disabled = true;
   spinner.classList.remove('hidden');
 
-  startStatusCycle('pending');
   startTs = Date.now();
   startElapsed();
   showProgressBar();
+  setRealProgress(1, stageMessage('reading_zip'), 'pending');
 
   try {
     if (!window.desktopApi || !window.desktopApi.reduceZipLocally || !window.desktopApi.submitReducedForAnalysis) {
@@ -1939,10 +1956,19 @@ async function submitJob() {
       throw new Error('Could not resolve local file path for ZIP. Re-select the file and try again.');
     }
 
+    // Subscribe to real IPC progress events from the main process
+    if (window.desktopApi.onReduceProgress) {
+      if (progressCleanup) progressCleanup();
+      progressCleanup = window.desktopApi.onReduceProgress((_evt, data) => onReduceProgress(data));
+    }
+
     const reduced = await window.desktopApi.reduceZipLocally({
       zipPath,
       compact: false,
     });
+
+    // Unsubscribe from reduction progress — hand off to LLM phase
+    if (progressCleanup) { progressCleanup(); progressCleanup = null; }
 
     const reducedReport = reduced && reduced.reducedReport;
     if (!reducedReport || !String(reducedReport).trim()) {
@@ -1951,7 +1977,7 @@ async function submitJob() {
     currentLocalSummary = (reduced && reduced.summary) || null;
     currentReducedReport = reducedReport; // store locally for download — never round-trips to server
 
-    updateStatusDot('running');
+    setRealProgress(87, stageMessage('report_ready'), 'running');
 
     const payload = {
       apiBaseUrl: API_BASE_URL,
@@ -1965,10 +1991,10 @@ async function submitJob() {
     const data = await window.desktopApi.submitReducedForAnalysis(payload);
 
     currentJobId = data.job_id;
-    updateStatusDot('running');
-    animateProgress(15, 75, 12000);
+    setRealProgress(90, stageMessage('llm_queued'), 'running');
     startPolling();
   } catch (e) {
+    if (progressCleanup) { progressCleanup(); progressCleanup = null; }
     stopStatusCycle();
     showError(e.message);
     setStatus('error', 'Upload failed');
@@ -1994,10 +2020,10 @@ function startPolling() {
       const data = await res.json();
       if (data.status === 'done') {
         clearInterval(pollTimer);
-        animateProgress(75, 100, 600);
+        setRealProgress(99, stageMessage('complete'), 'running');
         setTimeout(() => {
           stopStatusCycle();
-          setStatus('done', 'Analysis complete');
+          setRealProgress(100, stageMessage('complete'), 'done');
           stopElapsed();
           // Inject locally-computed summary when backend omits it (reduced upload path).
           if (!data.summary && currentLocalSummary) {
@@ -2014,7 +2040,7 @@ function startPolling() {
         stopElapsed();
         hideProgressBar();
       } else if (data.status === 'running') {
-        updateStatusDot('running');
+        setRealProgress(95, stageMessage('llm_analyzing'), 'running');
       }
     } catch {
       updateStatusDot('running');
@@ -2517,6 +2543,7 @@ function showError(msg) {
   el.style.display = '';
 }
 function resetUI() {
+  if (progressCleanup) { progressCleanup(); progressCleanup = null; }
   stopStatusCycle();
   clearInterval(pollTimer);
   clearInterval(elapsedTimer);
