@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.14.0](https://github.com/alexvalsechi/sprklogs/compare/v0.13.0...v0.14.0) (2026-03-23)
+
+
+### Features
+
+* add Google Analytics tracking script to enhance user analytics ([f6473ed](https://github.com/alexvalsechi/sprklogs/commit/f6473ed034de56cac429316eb52a928d366121f2))
+* add Google Analytics tracking script to enhance user analytics ([71f49cd](https://github.com/alexvalsechi/sprklogs/commit/71f49cd79d9e26357ee4d5e41b347545d3944b18))
+* add llms.txt and llms-full.txt links to footer and update sitem… ([18513a0](https://github.com/alexvalsechi/sprklogs/commit/18513a0e2de9c81379b08ecfcf3a7c65e47de30b))
+* add llms.txt and llms-full.txt links to footer and update sitemap and robots.txt for better accessibility ([d4a1988](https://github.com/alexvalsechi/sprklogs/commit/d4a1988b0a5bf2e8ea88f333fb273a57b7e6bf63))
+* enhance release workflow to compute desktop release scope based on changed files ([d2e98b6](https://github.com/alexvalsechi/sprklogs/commit/d2e98b6010f42190a8f16eba7c7b4f025ccd8a9d))
+* enhance release workflow to compute desktop release scope based… ([7495024](https://github.com/alexvalsechi/sprklogs/commit/7495024c270e0a7714acc8f92fad428e3ca8f7b4))
+* enhance website SEO and analytics with new metadata, sitemap, a… ([442ceef](https://github.com/alexvalsechi/sprklogs/commit/442ceefeddbd9b64f15861b7d7202a6c1778aae9))
+* enhance website SEO and analytics with new metadata, sitemap, and robots.txt ([d58deca](https://github.com/alexvalsechi/sprklogs/commit/d58decafd86b28ebc993a74b0e7d6a525f4b77d8))
+* replace gtag.js with Google Tag Manager for improved tracking ([ffd9e82](https://github.com/alexvalsechi/sprklogs/commit/ffd9e8274324220e06084b526fe21279596c81f5))
+* replace gtag.js with Google Tag Manager for improved tracking ([128088b](https://github.com/alexvalsechi/sprklogs/commit/128088b2cd62d8c12c6dc7879badcbe38507f694))
+
 ## [0.13.0](https://github.com/alexvalsechi/sprklogs/compare/v0.12.0...v0.13.0) (2026-03-20)
 
 
