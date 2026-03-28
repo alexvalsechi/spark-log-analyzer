@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.20.0](https://github.com/alexvalsechi/sprklogs/compare/v0.19.0...v0.20.0) (2026-03-28)
+
+
+### Features
+
+* implement update check functionality and UI notification for av… ([d1b643d](https://github.com/alexvalsechi/sprklogs/commit/d1b643dd8f93aa46cda87030716895b96372f12b))
+* implement update check functionality and UI notification for available updates ([9a982c0](https://github.com/alexvalsechi/sprklogs/commit/9a982c0f501c576b428b2b945d788886cd23a352))
+
 ## [0.19.0](https://github.com/alexvalsechi/sprklogs/compare/v0.18.0...v0.19.0) (2026-03-28)
 
 
