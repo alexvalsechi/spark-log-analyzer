@@ -399,12 +399,15 @@ jobs:
           Set-Content -Path apps/desktop/dist/checksums.txt -Value $checksums
 
       - name: Upload artifacts to release
-        uses: softprops/action-gh-release@b25b93d384199fc0fc8c2e126b2d937a0cbeb2ae
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd
         with:
-          tag_name: ${{ needs.release-please.outputs.tag_name }}
-          generate_release_notes: false
-          fail_on_unmatched_files: true
-          files: |
+          tag: ${{ needs.release-please.outputs.tag_name }}
+          allowUpdates: true
+          replacesArtifacts: true
+          omitBody: true
+          omitName: true
+          artifactErrorsFailBuild: true
+          artifacts: |
             apps/desktop/dist/*.exe
             apps/desktop/dist/checksums.txt
 
