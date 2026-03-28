@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.16.0](https://github.com/alexvalsechi/sprklogs/compare/v0.15.0...v0.16.0) (2026-03-28)
+
+
+### Features
+
+* enhance language localization in LLM analysis and update max_to… ([0a63a6c](https://github.com/alexvalsechi/sprklogs/commit/0a63a6c08a034c37569b84cb345143137b5472e4))
+* enhance language localization in LLM analysis and update max_tokens for adapters ([d1fb3a7](https://github.com/alexvalsechi/sprklogs/commit/d1fb3a7f1832770d052787a2eee953a70da0b2b8))
+
 ## [0.15.0](https://github.com/alexvalsechi/sprklogs/compare/v0.14.0...v0.15.0) (2026-03-23)
 
 
