@@ -130,6 +130,58 @@
       padding: 4px 10px; border-radius: 2px;
       opacity: 0.85;
     }
+    /* ── Update notification banner ─────────────────────── */
+    #update-banner {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      padding: 14px 18px;
+      max-width: 360px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      color: var(--text);
+      animation: update-slide-in 250ms ease;
+    }
+    #update-banner.visible { display: flex; flex-direction: column; gap: 10px; }
+    #update-banner-title {
+      font-weight: 600;
+      font-size: 0.93rem;
+      color: var(--accent2);
+    }
+    #update-banner-body { color: var(--text-dim); line-height: 1.45; }
+    #update-banner-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    #update-banner-actions .btn-update-download {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    #update-banner-actions .btn-update-download:hover { background: var(--accent2); }
+    #update-banner-actions .btn-update-dismiss {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    #update-banner-actions .btn-update-dismiss:hover { color: var(--text); border-color: var(--text-dim); }
+    @keyframes update-slide-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
     .btn-header-link {
       border: 1px solid var(--border2);
       background: var(--surface);
@@ -1462,6 +1514,15 @@
   </style>
 </head>
 <body>
+<!-- Update notification banner -->
+<div id="update-banner" role="alertdialog" aria-labelledby="update-banner-title" aria-describedby="update-banner-body">
+  <div id="update-banner-title">Update available</div>
+  <div id="update-banner-body"></div>
+  <div id="update-banner-actions">
+    <button class="btn-update-dismiss" type="button" onclick="dismissUpdateBanner()">Later</button>
+    <button class="btn-update-download" type="button" onclick="openReleasesPage()">Download</button>
+  </div>
+</div>
 <div class="shell">
 
   <!-- Header -->
@@ -1829,6 +1890,54 @@ function loadAppVersionBadge() {
   }).catch(function() {});
 }
 
+var _updateReleaseUrl = '';
+
+function openReleasesPage() {
+  if (_updateReleaseUrl) {
+    window.open(_updateReleaseUrl, '_blank', 'noopener,noreferrer');
+  }
+  dismissUpdateBanner();
+}
+
+function dismissUpdateBanner() {
+  var banner = document.getElementById('update-banner');
+  if (banner) {
+    banner.classList.remove('visible');
+    // Delay hiding so the CSS transition has time to finish
+    setTimeout(function() { banner.style.display = 'none'; }, 260);
+  }
+}
+
+function checkForUpdates() {
+  if (!window.api || typeof window.api.checkForUpdates !== 'function') {
+    return;
+  }
+  // Delay slightly so startup tasks complete first
+  setTimeout(function() {
+    window.api.checkForUpdates().then(function(result) {
+      if (!result || !result.hasUpdate) return;
+      _updateReleaseUrl = result.releaseUrl || '';
+      var t = translations[currentLang] || translations.en;
+      var bodyText = (t.updateBody || 'Version v{latest} is available (current: v{current}).')
+        .replace('{latest}', result.latestVersion)
+        .replace('{current}', result.currentVersion);
+      var title = document.getElementById('update-banner-title');
+      if (title) title.textContent = t.updateTitle || 'Update available';
+      var body = document.getElementById('update-banner-body');
+      if (body) body.textContent = bodyText;
+      var btnDownload = document.querySelector('#update-banner-actions .btn-update-download');
+      if (btnDownload) btnDownload.textContent = t.updateDownload || 'Download';
+      var btnDismiss = document.querySelector('#update-banner-actions .btn-update-dismiss');
+      if (btnDismiss) btnDismiss.textContent = t.updateDismiss || 'Later';
+      var banner = document.getElementById('update-banner');
+      if (banner) {
+        banner.style.display = '';
+        banner.classList.add('visible');
+      }
+    }).catch(function() { /* silently ignore network errors */ });
+  }, 3000);
+}
+
 function apiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_BASE_URL}${normalizedPath}`;
@@ -1880,7 +1989,11 @@ const translations = {
     doc02Btn: 'Open document',
     doc03Title: '03 — Privacy Policy + Terms of Use',
     doc03Desc: 'Revised policy and terms template for the current distribution.',
-    doc03Btn: 'Open document'
+    doc03Btn: 'Open document',
+    updateTitle: 'Update available',
+    updateBody: 'Version v{latest} is now available (current: v{current}). Download the latest release from GitHub.',
+    updateDownload: 'Download',
+    updateDismiss: 'Later',
   },
   pt: {
     authLabel: '00 — Autenticação',
@@ -1923,7 +2036,11 @@ const translations = {
     doc02Btn: 'Abrir documento',
     doc03Title: '03 — Politica de Privacidade + Termos de Uso',
     doc03Desc: 'Modelo revisado de politica e termos para a distribuicao atual.',
-    doc03Btn: 'Abrir documento'
+    doc03Btn: 'Abrir documento',
+    updateTitle: 'Atualização disponível',
+    updateBody: 'A versão v{latest} está disponível (atual: v{current}). Baixe a versão mais recente no GitHub.',
+    updateDownload: 'Baixar',
+    updateDismiss: 'Agora não',
   }
 };
 
@@ -2100,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   switchTab(savedTab === 'help' || savedTab === 'history' ? savedTab : 'home');
 
   loadAppVersionBadge();
+  checkForUpdates();
   updateLanguage();
   loadHistory();
 

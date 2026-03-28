@@ -1,3 +1,10 @@
+export interface UpdateCheckResult {
+  hasUpdate:      boolean
+  latestVersion:  string
+  currentVersion: string
+  releaseUrl:     string
+}
+
 export interface ReduceProgressData {
   percent: number
   stage: string
@@ -7,6 +14,7 @@ export interface IpcApi {
   compressFile: (filePath: string) => Promise<{ outputPath: string; savedBytes: number }>
   getCompressionStatus: (jobId: string) => Promise<{ status: 'pending' | 'running' | 'done' | 'error'; progress: number }>
   getAppVersion: () => Promise<string>
+  checkForUpdates: () => Promise<UpdateCheckResult>
 
   login: (credentials: { email: string; password: string }) => Promise<{ token: string }>
   logout: () => Promise<void>
