@@ -12,10 +12,11 @@
     "build:renderer": "npx esbuild renderer/features/spark-analyzer/SparkPlanViewer.jsx --bundle --outfile=renderer/features/spark-analyzer/spark-plan-viewer.js --platform=browser --target=chrome120 --minify",
     "start": "set \"ELECTRON_RUN_AS_NODE=\" && npm run build && npm run build:renderer && npx electron .",
     "check": "node -e \"require('./package.json'); console.log('desktop package ok')\"",
-    "pack:win": "npm run build:backend:win && npm run build && npm run build:renderer && npx electron-builder --win --dir",
-    "pack:win:debug": "npm run build:backend:win && npm run build && npm run build:renderer && npx electron-builder --win --dir -c.win.signAndEditExecutable=false",
-    "dist:win": "npm run build:backend:win && npm run build && npm run build:renderer && npx electron-builder --win nsis --publish never",
-    "dist:win:local": "npm run build:backend:win && npm run build && npm run build:renderer && npx electron-builder --win nsis --publish never -c.win.signAndEditExecutable=false"
+    "build:inject-token": "node scripts/inject-token.js",
+    "pack:win": "npm run build:backend:win && npm run build && npm run build:inject-token && npm run build:renderer && npx electron-builder --win --dir",
+    "pack:win:debug": "npm run build:backend:win && npm run build && npm run build:inject-token && npm run build:renderer && npx electron-builder --win --dir -c.win.signAndEditExecutable=false",
+    "dist:win": "npm run build:backend:win && npm run build && npm run build:inject-token && npm run build:renderer && npx electron-builder --win nsis --publish never",
+    "dist:win:local": "npm run build:backend:win && npm run build && npm run build:inject-token && npm run build:renderer && npx electron-builder --win nsis --publish never -c.win.signAndEditExecutable=false"
   },
   "dependencies": {
     "@log-sparkui/ipc-types": "file:../../packages/ipc-types",
