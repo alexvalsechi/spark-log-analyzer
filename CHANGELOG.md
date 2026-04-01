@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.22.0](https://github.com/alexvalsechi/sprklogs/compare/v0.21.0...v0.22.0) (2026-04-01)
+
+
+### Features
+
+* improve analysis ([18f9dff](https://github.com/alexvalsechi/sprklogs/commit/18f9dff832720f0a4c74bee6770021813622a5b6))
+* improve analysis ([0edd4e3](https://github.com/alexvalsechi/sprklogs/commit/0edd4e374e37be2926763cdf97698fbb899e94f7))
+
+
+### Bug Fixes
+
+* update temporary zip path construction in test for sparklens report ([7e3f036](https://github.com/alexvalsechi/sprklogs/commit/7e3f03637cc8434f3c3b99260a79d16d31167abd))
+* update temporary zip path construction in test for sparklens report ([d9298ac](https://github.com/alexvalsechi/sprklogs/commit/d9298ac0155c068b73f7885e84a3ecfb22595f6c))
+
 ## [0.21.0](https://github.com/alexvalsechi/sprklogs/compare/v0.20.0...v0.21.0) (2026-03-31)
 
 
