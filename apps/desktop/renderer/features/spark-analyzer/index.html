@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,7 +9,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;1,9..40,200;1,9..40,300&family=Inconsolata:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;1,9..40,200;1,9..40,300&family=IBM+Plex+Mono:wght@300;400;500&family=Inconsolata:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
     // Disable automatic page-wide Mermaid rendering; we render only inside the doc modal.
@@ -36,9 +36,10 @@
       --text:      #ffffff;
       --text-dim:  rgba(255,255,255,0.62);
       --text-mute: rgba(255,255,255,0.38);
-      --mono:      "Inconsolata", monospace;
+      --mono:      "IBM Plex Mono", "Inconsolata", monospace;
       --sans:      "DM Sans", sans-serif;
       --serif:     "Instrument Serif", serif;
+      --display:   "Syne", "DM Sans", sans-serif;
       --radius:    2px;
       --transition: 180ms ease;
     }
@@ -202,11 +203,15 @@
 
     /* ── Section titles ────────────────────────────────────── */
     .section-label {
-      font-family: var(--mono); font-size: 0.72rem;
-      font-weight: 400; letter-spacing: 0.12em;
+      font-family: var(--display); font-size: 0.63rem;
+      font-weight: 700; letter-spacing: 0.18em;
       text-transform: uppercase; color: var(--text-dim);
-      margin-bottom: 14px;
-      display: flex; align-items: center; gap: 10px;
+      margin: 40px 0 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-label::before {
+      content: ""; width: 3px; height: 14px;
+      background: var(--accent); border-radius: 2px; flex-shrink: 0;
     }
     .section-label::after {
       content: ""; flex: 1; height: 1px;
@@ -630,24 +635,31 @@
     /* App Summary cards ─────────────────────────────────────── */
     .summary-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 10px; margin-bottom: 24px;
-    }
-    .kpi-card {
-      background: rgba(15, 15, 15, 0.9);
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      backdrop-filter: blur(6px);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 720px) { .summary-cards { grid-template-columns: 1fr 1fr; } }
+    .kpi-card {
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .kpi-label {
-      font-family: var(--mono); font-size: 0.65rem;
+      font-family: var(--mono); font-size: 0.6rem;
       letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 6px;
+      color: var(--text-mute); margin-bottom: 2px;
     }
     .kpi-value {
-      font-family: var(--mono); font-size: 0.6rem;
-      font-weight: 600; color: #fff;
+      font-family: var(--display); font-size: 1.35rem;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+      color: #fff;
     }
     .kpi-value.accent  { color: var(--accent); }
     .kpi-value.green   { color: var(--green); }
@@ -655,42 +667,40 @@
     .kpi-value.red     { color: var(--red); }
 
     /* Efficiency panel ─────────────────────────────────── */
-    .efficiency-panel {
-      background: rgba(15, 15, 15, 0.9);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 14px;
-      backdrop-filter: blur(6px);
-    }
     .efficiency-kpis {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 0;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
     }
     @media (max-width: 560px) { .efficiency-kpis { grid-template-columns: 1fr; } }
     .eff-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .eff-label {
-      font-family: var(--mono); font-size: 0.62rem;
+      font-family: var(--mono); font-size: 0.6rem;
       letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 5px;
+      color: var(--text-mute); margin-bottom: 2px;
     }
     .eff-value {
-      font-family: var(--mono); font-size: 1rem;
-      font-weight: 600; color: #fff;
+      font-family: var(--display); font-size: 1.35rem;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+      color: #fff;
     }
     .eff-value.bad  { color: var(--red); }
     .eff-value.warn { color: var(--yellow); }
     .eff-value.good { color: var(--green); }
     .eff-hint {
       font-size: 0.7rem; color: var(--text-mute);
-      margin-top: 3px; line-height: 1.4;
+      margin-top: 4px; line-height: 1.4;
     }
 
     /* Executor table ───────────────────────────────────── */
@@ -700,7 +710,6 @@
       border-radius: var(--radius);
       overflow-x: auto;
       margin-bottom: 24px;
-      backdrop-filter: blur(6px);
     }
 
     /* Stage table ───────────────────────────────────────────── */
@@ -710,7 +719,8 @@
       border-radius: var(--radius);
       overflow-x: auto;
       margin-bottom: 24px;
-      backdrop-filter: blur(6px);
+      position: relative;
+      z-index: 0;
     }
     table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
     thead tr {
@@ -723,6 +733,8 @@
       text-transform: uppercase; color: var(--text-dim);
       padding: 10px 14px; text-align: left;
       white-space: nowrap;
+      position: relative;
+      overflow: visible;
     }
     th.sortable {
       cursor: pointer;
@@ -746,6 +758,49 @@
     }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(255,255,255,0.02); }
+    tr.row-warn td { background: rgba(230,160,0,0.07); }
+    tr.row-warn:hover td { background: rgba(230,160,0,0.13); }
+    tr.row-crit td { background: rgba(200,50,50,0.09); }
+    tr.row-crit:hover td { background: rgba(200,50,50,0.16); }
+    .stage-filter-bar {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .stage-filter-btn {
+      font-family: var(--mono); font-size: 0.72rem;
+      padding: 4px 10px; border-radius: 4px;
+      border: 1px solid var(--border2); background: var(--surface2);
+      color: var(--text-dim); cursor: pointer; transition: all .15s;
+    }
+    .stage-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .stage-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    /* Source badges for Problemas tab */
+    .source-badge {
+      font-family: var(--mono); font-size: 0.62rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px; letter-spacing: 0.05em;
+      margin-left: auto; flex-shrink: 0;
+    }
+    .source-ai { background: rgba(110,140,255,0.18); color: #8ba3ff; border: 1px solid rgba(110,140,255,0.35); }
+    .source-arithmetic { background: rgba(60,200,130,0.15); color: var(--green); border: 1px solid rgba(60,200,130,0.3); }
+    /* Collapsible narrative in Problemas tab */
+    .narrative-collapsible { margin-top: 1.5rem; border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; }
+    .narrative-collapsible > summary {
+      padding: 10px 14px; cursor: pointer; font-family: var(--mono);
+      font-size: 0.78rem; color: var(--text-dim); background: var(--surface2);
+      list-style: none; user-select: none;
+    }
+    .narrative-collapsible > summary::-webkit-details-marker { display: none; }
+    .narrative-collapsible > summary:hover { color: var(--text); }
+    .narrative-collapsible[open] > summary { border-bottom: 1px solid var(--border2); }
+    .narrative-collapsible .story-timeline { padding: 1rem; }
+    /* Score collapsible in header */
+    .score-breakdown-details { margin: 0.75rem 0 0; }
+    .score-breakdown-details > summary {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim);
+      cursor: pointer; padding: 4px 0; list-style: none; user-select: none;
+    }
+    .score-breakdown-details > summary::-webkit-details-marker { display: none; }
+    .score-breakdown-details > summary:hover { color: var(--accent); }
+    .score-breakdown-details .score-breakdown-body { margin-top: 10px; }
     .tag-skew {
       display: inline-flex; align-items: center; gap: 4px;
       background: rgba(232,115,42,0.15);
@@ -1187,9 +1242,7 @@
       background: rgba(255,255,255,0.03);
     }
     .metric-help-popup {
-      position: absolute;
-      left: 0;
-      bottom: calc(100% + 10px);
+      position: fixed;
       width: min(320px, 72vw);
       padding: 10px 12px;
       border-radius: 6px;
@@ -1203,14 +1256,12 @@
       text-transform: none;
       box-shadow: 0 12px 28px rgba(0,0,0,0.42);
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateY(4px);
       pointer-events: none;
       transition: opacity var(--transition), transform var(--transition);
-      z-index: 50;
+      z-index: 99999;
     }
-    .metric-help:hover .metric-help-popup,
-    .metric-help:focus-visible .metric-help-popup,
-    .metric-help:focus-within .metric-help-popup {
+    .metric-help-popup.tip-visible {
       opacity: 1;
       transform: translateY(0);
     }
@@ -1662,6 +1713,475 @@
       .byok-row { grid-template-columns: 1fr; }
       .provider-picker { grid-template-columns: 1fr; }
     }
+
+    /* ─────────────────────────────────────────────────────
+       STORYTELLING LAYOUT  (results after analysis)
+    ───────────────────────────────────────────────────── */
+
+    /* --- Header redesign --- */
+    .logo-star {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      flex-shrink: 0;
+    }
+    .header-logo-name {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .header-tag {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border2);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+
+    /* --- Upload drop zones redesign --- */
+    .upload-grid-story {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    @media (max-width: 720px) { .upload-grid-story { grid-template-columns: 1fr; } }
+    .drop-zone-story {
+      background: rgba(15,15,15,0.9);
+      border: 1px dashed var(--border2);
+      border-radius: 6px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .drop-zone-story:hover, .drop-zone-story.drag-over {
+      border-color: var(--accent);
+      background: rgba(227,89,20,0.07);
+    }
+    .drop-zone-story.has-file { border-style: solid; border-color: var(--green); }
+    .drop-zone-story input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .dz-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      background: var(--surface);
+    }
+    .has-file .dz-badge { background: rgba(75,196,126,0.1); color: var(--green); border-color: rgba(75,196,126,0.4); }
+    .dz-title {
+      font-family: var(--display);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .dz-hint { font-size: 0.72rem; color: var(--text-dim); }
+    .dz-filename { font-family: var(--mono); font-size: 0.7rem; color: var(--green); margin-top: 8px; word-break: break-all; }
+
+    /* --- Fix/Gain banner (post-analysis) --- */
+    .fix-banner {
+      background: linear-gradient(135deg, rgba(227,89,20,0.09) 0%, rgba(227,89,20,0.03) 100%);
+      border: 1px solid rgba(227,89,20,0.22);
+      border-radius: 10px;
+      padding: 1.25rem 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .fix-banner-left { display: flex; flex-direction: column; gap: 3px; }
+    .fix-banner-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .fix-banner-value {
+      font-family: var(--display);
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .fix-banner-current {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-mute);
+    }
+    .fix-banner-right {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+    }
+    .fix-metric-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--text-dim);
+    }
+    .fix-pill {
+      background: rgba(75,196,126,0.1);
+      border: 1px solid rgba(75,196,126,0.25);
+      color: var(--green);
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+    }
+
+    /* --- Score ring --- */
+    .score-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 110px;
+    }
+    .score-ring-svg { transform: rotate(-90deg); }
+    .score-ring-inner {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .score-ring-num {
+      font-family: var(--display);
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .score-ring-lbl {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .score-ring-tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 10px;
+      border-radius: 3px;
+    }
+    .score-ring-tag.bad  { background:rgba(239,107,107,0.12); color:var(--red);    border:1px solid rgba(239,107,107,0.25); }
+    .score-ring-tag.warn { background:rgba(232,195,58,0.12);  color:var(--yellow); border:1px solid rgba(232,195,58,0.25); }
+    .score-ring-tag.good { background:rgba(75,196,126,0.1);   color:var(--green);  border:1px solid rgba(75,196,126,0.25); }
+
+    /* --- KPI strip (storytelling) --- */
+    .st-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 720px) { .st-kpi-grid { grid-template-columns: 1fr 1fr; } }
+    .st-kpi-cell {
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .st-kpi-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .st-kpi-value {
+      font-family: var(--display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: #fff;
+    }
+    .st-kpi-value.kv-warn  { color: var(--yellow); }
+    .st-kpi-value.kv-crit  { color: var(--red); }
+    .st-kpi-value.kv-ok    { color: var(--green); }
+    .st-kpi-value.kv-blue  { color: var(--blue); }
+    .st-kpi-sub { font-size: 0.68rem; color: var(--text-mute); }
+
+    /* --- Result tabs (inside analysis panel) --- */
+    .res-tabs-nav {
+      display: flex;
+      gap: 2px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 1.5rem;
+      width: fit-content;
+    }
+    .res-tab-btn {
+      padding: 6px 16px;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      border-radius: 5px;
+      cursor: pointer;
+      color: var(--text-mute);
+      border: none;
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .res-tab-btn:hover { color: var(--text-dim); }
+    .res-tab-btn.active {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .res-tab-pane { display: none; }
+    .res-tab-pane.active { display: block; }
+
+    /* --- Diagnosis header (score + title row) --- */
+    .diagnosis-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 1.5rem;
+    }
+    .diagnosis-eyebrow {
+      font-family: var(--display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .diagnosis-title {
+      font-family: var(--display);
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .diagnosis-sub { font-size: 0.82rem; color: var(--text-dim); line-height: 1.65; max-width: 520px; }
+
+    /* --- Story timeline --- */
+    .story-timeline {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .story-timeline::before {
+      content: '';
+      position: absolute;
+      left: 19px; top: 24px; bottom: 24px;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--accent) 0%, var(--border) 100%);
+    }
+    .story-step {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 20px;
+      padding-bottom: 28px;
+    }
+    .step-dot {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.72rem; font-weight: 500;
+      flex-shrink: 0;
+      position: relative; z-index: 1;
+      border: 1px solid;
+    }
+    .dot-crit { background:rgba(239,107,107,0.15); border-color:rgba(239,107,107,0.45); color:var(--red); }
+    .dot-warn { background:rgba(232,195,58,0.14);  border-color:rgba(232,195,58,0.4);   color:var(--yellow); }
+    .dot-ok   { background:rgba(75,196,126,0.1);   border-color:rgba(75,196,126,0.35);  color:var(--green); }
+    .step-content { padding-top: 8px; }
+    .step-header { display:flex; align-items:baseline; gap:10px; margin-bottom:7px; }
+    .step-name {
+      font-family: var(--display);
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: -0.015em;
+    }
+    .step-badge {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .badge-crit { background:rgba(239,107,107,0.12); color:var(--red);    border:1px solid rgba(239,107,107,0.25); }
+    .badge-warn { background:rgba(232,195,58,0.12);  color:var(--yellow); border:1px solid rgba(232,195,58,0.25); }
+    .step-desc { font-size: 0.82rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 10px; }
+    .step-evidence {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .evidence-row-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .evidence-cell {
+      padding: 10px 14px;
+      border-right: 1px solid var(--border);
+    }
+    .evidence-cell:last-child { border-right: none; }
+    .ev-label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 5px; }
+    .ev-value { font-size: 0.8rem; color: var(--text); }
+    .gain-strip-story {
+      background: rgba(75,196,126,0.05);
+      border-top: 1px solid rgba(75,196,126,0.15);
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .gain-icon-story {
+      width: 14px; height: 14px;
+      background: var(--green);
+      clip-path: polygon(10% 50%, 40% 80%, 90% 20%, 80% 10%, 40% 65%, 20% 40%);
+      flex-shrink: 0;
+    }
+
+    /* --- Bottleneck cards (storytelling) --- */
+    .st-bottleneck-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .st-bn-header {
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .st-bn-id {
+      font-family: var(--mono); font-size: 0.7rem;
+      padding: 3px 9px; border-radius: 3px;
+    }
+    .st-bn-id.crit { background:rgba(239,107,107,0.1); color:var(--red); border:1px solid rgba(239,107,107,0.25); }
+    .st-bn-id.warn { background:rgba(232,195,58,0.1);  color:var(--yellow); border:1px solid rgba(232,195,58,0.25); }
+    .st-bn-title {
+      font-family: var(--display);
+      font-size: 0.95rem; font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .st-bn-body { padding: 12px 16px; }
+    .code-diff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    @media (max-width: 720px) { .code-diff-grid { grid-template-columns: 1fr; } }
+    .code-panel-story {
+      background: var(--bg);
+      padding: 10px 14px;
+    }
+    .code-panel-label {
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .code-panel-label.before { color: var(--red); }
+    .code-panel-label.after  { color: var(--green); }
+    .code-block-story {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    /* --- Action plan cards --- */
+    .action-plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .ap-header {
+      padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      gap: 10px; flex-wrap: wrap;
+    }
+    .ap-num {
+      font-family: var(--mono); font-size: 0.68rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-dim); padding: 3px 9px; border-radius: 3px;
+    }
+    .ap-title {
+      font-family: var(--display);
+      font-size: 0.95rem; font-weight: 600;
+    }
+    .ap-location {
+      font-family: var(--mono); font-size: 0.68rem;
+      color: var(--text-mute); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 999px;
+    }
+    .ap-body { padding: 14px 16px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.65; }
+    .ap-steps { counter-reset: step; list-style: none; display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
+    .ap-steps li { counter-increment: step; display: flex; gap: 9px; align-items: flex-start; }
+    .ap-steps li::before {
+      content: counter(step);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 0.65rem;
+      color: var(--text-dim); flex-shrink: 0;
+    }
+
+    /* --- Section divider --- */
+    .st-section-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .st-section-title::after { content: ''; flex: 1; height: 1px; }
   </style>
 </head>
 <body>
@@ -1678,16 +2198,16 @@
 
   <!-- Header -->
   <header>
-    <div class="logo">
-      <img src="favicon-96x96.png" alt="SprkLogs Logo" width="96" height="96" />
+    <div class="logo" style="gap:10px;">
+      <img src="logo-256.png" alt="SprkLogs" style="width:28px;height:28px;object-fit:contain;" />
+      <span class="header-logo-name">SprkLogs</span>
     </div>
-    <div class="header-text">
-      <h1>SprkLogs</h1>
-      <p id="header-subtitle">Análise de Performance · Apache Spark</p>
+    <div id="header-app-meta" style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; overflow:hidden; padding: 0 8px;">
+      <span class="header-tag" id="header-app-id" style="display:none"></span>
     </div>
-    <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
-      <label id="lang-label" for="lang-select" style="font-size:0.85rem; color:var(--text-dim);">Language:</label>
-      <select id="lang-select" style="background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); padding:4px 8px; font-family:var(--mono); font-size:0.82rem; color:var(--text);">
+    <div style="margin-left:auto; display:flex; align-items:center; gap:10px; flex-shrink:0;">
+      <label id="lang-label" for="lang-select" style="font-size:0.78rem; color:var(--text-dim); white-space:nowrap;">Language:</label>
+      <select id="lang-select" style="background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); padding:4px 8px; font-family:var(--mono); font-size:0.78rem; color:var(--text);">
         <option value="en">English</option>
         <option value="pt">Português (Brasil)</option>
       </select>
@@ -1703,6 +2223,36 @@
   </div>
 
   <section id="tab-home" class="tab-pane active">
+
+  <!-- Analysis Overview -->
+  <div id="intro-section" style="margin-top:40px; margin-bottom:0;">
+    <div class="section-label" id="lbl-intro"></div>
+    <p id="intro-desc" style="font-size:0.84rem; color:var(--text-dim); line-height:1.65; margin-bottom:18px; max-width:720px;"></p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+      <!-- Offline card -->
+      <div style="background:var(--surface2); border:1px solid var(--border2); border-radius:var(--radius); padding:18px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="font-family:var(--mono); font-size:0.62rem; font-weight:700; letter-spacing:0.1em; color:#4bc47e; background:rgba(75,196,126,0.10); border:1px solid rgba(75,196,126,0.28); border-radius:var(--radius); padding:2px 7px; flex-shrink:0;">OFFLINE</span>
+          <span id="intro-local-title" style="font-family:var(--display); font-size:0.8rem; font-weight:700; color:var(--text);"></span>
+        </div>
+        <p id="intro-local-subdesc" style="font-size:0.76rem; color:var(--text-mute); margin-bottom:10px; line-height:1.5;"></p>
+        <ul id="intro-local-list" style="list-style:none; display:flex; flex-direction:column; gap:5px;"></ul>
+      </div>
+
+      <!-- AI card -->
+      <div style="background:var(--surface2); border:1px solid rgba(227,89,20,0.28); border-radius:var(--radius); padding:18px 20px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="font-family:var(--mono); font-size:0.62rem; font-weight:700; letter-spacing:0.1em; color:var(--accent2); background:rgba(227,89,20,0.10); border:1px solid rgba(227,89,20,0.28); border-radius:var(--radius); padding:2px 7px; flex-shrink:0;">+ AI</span>
+          <span id="intro-ai-title" style="font-family:var(--display); font-size:0.8rem; font-weight:700; color:var(--text);"></span>
+        </div>
+        <p id="intro-ai-subdesc" style="font-size:0.76rem; color:var(--text-mute); margin-bottom:10px; line-height:1.5;"></p>
+        <ul id="intro-ai-list" style="list-style:none; display:flex; flex-direction:column; gap:5px;"></ul>
+      </div>
+
+    </div>
+    <p id="intro-flow" style="font-size:0.71rem; color:var(--text-mute); font-family:var(--mono); margin-top:10px; letter-spacing:0.04em;"></p>
+  </div>
 
   <!-- Authentication -->
   <div style="margin-top: 40px; margin-bottom: 40px;">
@@ -1803,23 +2353,23 @@
   <div style="margin-top: 40px">
     <div class="section-label">01 — Upload</div>
 
-    <div class="upload-grid">
+    <div class="upload-grid-story">
       <!-- ZIP drop zone -->
-      <div class="drop-zone" id="zone-zip" ondragover="onDragOver(event,'zip')" ondragleave="onDragLeave('zip')" ondrop="onDrop(event,'zip')">
+      <div class="drop-zone-story" id="zone-zip" ondragover="onDragOver(event,'zip')" ondragleave="onDragLeave('zip')" ondrop="onDrop(event,'zip')">
         <input type="file" id="input-zip">
-        <span class="drop-icon">ZIP</span>
-        <div class="drop-title">Event Log ZIP</div>
-        <div class="drop-hint">Drag &amp; drop or click to select<br><em style="opacity:.6">.zip — Spark event logs</em></div>
-        <div class="file-name" id="name-zip"></div>
+        <div class="dz-badge">ZIP</div>
+        <div class="dz-title">Event Log ZIP</div>
+        <div class="dz-hint">Drag &amp; drop or click to select<br><em style="opacity:.6">.zip — Spark event logs</em></div>
+        <div class="dz-filename" id="name-zip"></div>
       </div>
 
       <!-- PySpark files drop zone -->
-      <div class="drop-zone" id="zone-py" ondragover="onDragOver(event,'py')" ondragleave="onDragLeave('py')" ondrop="onDrop(event,'py')">
+      <div class="drop-zone-story" id="zone-py" ondragover="onDragOver(event,'py')" ondragleave="onDragLeave('py')" ondrop="onDrop(event,'py')">
         <input type="file" id="input-py" accept=".py" multiple>
-        <span class="drop-icon">PY</span>
-        <div class="drop-title" id="py-title">PySpark Source Files <span style="opacity:.5;font-size:.75em">(optional)</span></div>
-        <div class="drop-hint">Drag &amp; drop or click to select<br><em style="opacity:.6">.py — job source code</em></div>
-        <div class="file-name" id="name-py"></div>
+        <div class="dz-badge">PY</div>
+        <div class="dz-title" id="py-title">PySpark Source Files <span style="opacity:.5;font-size:.75em">(optional)</span></div>
+        <div class="dz-hint">Drag &amp; drop or click to select<br><em style="opacity:.6">.py — job source code</em></div>
+        <div class="dz-filename" id="name-py"></div>
       </div>
     </div>
 
@@ -1846,6 +2396,9 @@
 
   <!-- Results -->
   <div id="results">
+
+    <!-- Unified storytelling diagnostic — always shown first -->
+    <div id="unified-diagnostic-section" style="display:none;margin-top:24px;"></div>
 
     <div id="legacy-summary-section">
       <div class="section-label" id="results-summary-label" style="margin-top:48px">02 — Application Summary</div>
@@ -1944,36 +2497,36 @@
     <div style="margin-top: 32px;">
       <div class="section-label" id="help-section-label">Ajuda</div>
       <div class="panel-block" style="margin-bottom: 16px;">
-        <div id="help-panel-title" style="font-family:var(--mono); font-size:0.86rem; color:var(--text);">Documentacao de Privacidade e Legal</div>
+        <div id="help-panel-title" style="font-family:var(--mono); font-size:0.86rem; color:var(--text);">Privacy and Legal Documentation</div>
         <div id="help-panel-desc" style="font-size:0.88rem; color:var(--text-dim); margin-top:6px; line-height:1.6;">
-          Esta aba concentra os documentos revisados da arquitetura desktop, privacidade e termos de uso.
+          This tab contains the reviewed documents on desktop architecture, privacy and terms of use.
         </div>
       </div>
 
-      <div id="help-docs-label" class="section-label">06 — Documentos de Privacidade e Legal</div>
+      <div id="help-docs-label" class="section-label">06 — Privacy and Legal Documents</div>
       <div class="panel-block" style="display: grid; gap: 12px;">
         <div class="doc-row">
           <div>
-            <div id="doc01-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">01 — Diagrama de Arquitetura de Privacidade</div>
-            <div id="doc01-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Fluxo atual do desktop, reducao local e pontos de saida de dados.</div>
+            <div id="doc01-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">01 — Privacy Architecture Diagram</div>
+            <div id="doc01-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Current desktop data flow, local reduction and data exit points.</div>
           </div>
-          <button id="doc01-btn" class="btn-dl" type="button" onclick="openDocLang('doc01')">Abrir documento</button>
+          <button id="doc01-btn" class="btn-dl" type="button" onclick="openDocLang('doc01')">Open document</button>
         </div>
 
         <div class="doc-row">
           <div>
-            <div id="doc02-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">02 — Documento de Arquitetura de Privacidade</div>
-            <div id="doc02-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Descricao tecnica do Electron, IPC, backend local e retencao.</div>
+            <div id="doc02-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">02 — Privacy Architecture Document</div>
+            <div id="doc02-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Technical description of Electron, IPC, local backend and data retention.</div>
           </div>
-          <button id="doc02-btn" class="btn-dl" type="button" onclick="openDocLang('doc02')">Abrir documento</button>
+          <button id="doc02-btn" class="btn-dl" type="button" onclick="openDocLang('doc02')">Open document</button>
         </div>
 
         <div class="doc-row">
           <div>
-            <div id="doc03-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">03 — Politica de Privacidade + Termos de Uso</div>
-            <div id="doc03-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Modelo revisado de politica e termos para a distribuicao atual.</div>
+            <div id="doc03-title" style="font-family:var(--mono); font-size:0.8rem; font-weight:600;">03 — Privacy Policy + Terms of Use</div>
+            <div id="doc03-desc" style="font-size:0.82rem; color:var(--text-dim); margin-top:4px;">Revised policy and terms model for the current distribution.</div>
           </div>
-          <button id="doc03-btn" class="btn-dl" type="button" onclick="openDocLang('doc03')">Abrir documento</button>
+          <button id="doc03-btn" class="btn-dl" type="button" onclick="openDocLang('doc03')">Open document</button>
         </div>
     </div>
   </div>
@@ -1988,8 +2541,8 @@
 <div id="doc-modal" class="doc-modal" onclick="onDocModalBackdrop(event)">
   <div class="doc-card">
     <div class="doc-head">
-      <div id="doc-modal-title" class="doc-title">Documento</div>
-      <button class="doc-close" type="button" onclick="closeDocViewer()">Fechar</button>
+      <div id="doc-modal-title" class="doc-title">Document</div>
+      <button class="doc-close" type="button" onclick="closeDocViewer()">Close</button>
     </div>
     <div id="doc-modal-body" class="doc-body"></div>
   </div>
@@ -2161,6 +2714,13 @@ const translations = {
     updateBody: 'Version v{latest} is now available (current: v{current}). Download the latest release from GitHub.',
     updateDownload: 'Download',
     updateDismiss: 'Later',
+    introLabel: '— How It Works',
+    introDesc: 'Upload your Spark event log ZIP for instant offline metrics — no account or API key needed. Add an LLM API key (BYOK) in section 00 to unlock AI-powered diagnostics and generated code fixes.',
+    introLocalTitle: 'Local · No AI required',
+    introLocalSubdesc: 'Computed deterministically from the event log. Zero network calls.',
+    introAiTitle: 'With AI (BYOK)',
+    introAiSubdesc: 'Enabled when you provide an API key in section 00 below.',
+    introFlow: 'Upload &nbsp;→&nbsp; Local Analysis &nbsp;→&nbsp; <span style="color:var(--accent);">(optional)</span>&nbsp; AI Analysis',
   },
   pt: {
     authLabel: '00 — Autenticação',
@@ -2208,6 +2768,13 @@ const translations = {
     updateBody: 'A versão v{latest} está disponível (atual: v{current}). Baixe a versão mais recente no GitHub.',
     updateDownload: 'Baixar',
     updateDismiss: 'Agora não',
+    introLabel: '— Como Funciona',
+    introDesc: 'Faça upload do ZIP do event log para métricas offline instantâneas — sem conta ou chave de API. Adicione uma chave de API LLM (BYOK) na seção 00 para habilitar diagnósticos com IA e correções de código geradas.',
+    introLocalTitle: 'Local · Sem IA',
+    introLocalSubdesc: 'Calculado deterministicamente a partir do event log. Zero chamadas de rede.',
+    introAiTitle: 'Com IA (BYOK)',
+    introAiSubdesc: 'Habilitado ao fornecer uma chave de API na seção 00 abaixo.',
+    introFlow: 'Upload &nbsp;→&nbsp; Análise Local &nbsp;→&nbsp; <span style="color:var(--accent);">(opcional)</span>&nbsp; Análise com IA',
   }
 };
 
@@ -2225,6 +2792,47 @@ function formatLocale(template, vars = {}) {
 function naLabel() {
   return localeText('n/a', 'n/d');
 }
+
+const introItems = {
+  local: {
+    en: [
+      'App duration, Spark version, executor &amp; memory config',
+      'Cluster utilization — core-hours available vs. wasted',
+      'Per-stage: I/O bytes, GC%, shuffle, spill, skew ratio',
+      'Auto-detected bottlenecks — top 5 (skew, spill, shuffle, GC, driver overhead)',
+      'Scalability simulation — estimated duration at 10%–500% executors',
+      'SQL physical plan visualizer — node classification, pan &amp; zoom',
+      'Per-executor &amp; per-host task, GC &amp; CPU metrics',
+    ],
+    pt: [
+      'Duração do app, versão do Spark, config de executors e memória',
+      'Utilização do cluster — core-hours disponíveis vs. desperdiçados',
+      'Por stage: bytes I/O, GC%, shuffle, spill, skew ratio',
+      'Bottlenecks detectados automaticamente — top 5 (skew, spill, shuffle, GC, driver)',
+      'Simulação de escalabilidade — duração estimada com 10%–500% dos executors',
+      'Visualizador do plano físico SQL — classificação de nós, pan &amp; zoom',
+      'Métricas de task, GC e CPU por executor e por host',
+    ]
+  },
+  ai: {
+    en: [
+      'Overall score (0–100) + one-line verdict',
+      'Estimated time saved after optimizations',
+      'Named bottlenecks — root cause, operator &amp; counterfactual duration',
+      'Generated <code style="font-family:var(--mono);font-size:0.73rem;color:var(--accent2)">spark.conf.set(…)</code> config recommendations',
+      'PySpark code fixes — before → after <span style="opacity:.5;font-size:.88em">(requires .py files)</span>',
+      'Source ↔ log causal linkage — function → stage mapping',
+    ],
+    pt: [
+      'Score geral (0–100) + veredito em uma linha',
+      'Tempo estimado economizado após otimizações',
+      'Bottlenecks nomeados — causa raiz, operador e duração contrafactual',
+      'Recomendações <code style="font-family:var(--mono);font-size:0.73rem;color:var(--accent2)">spark.conf.set(…)</code> geradas',
+      'Correções de código PySpark — antes → depois <span style="opacity:.5;font-size:.88em">(requer arquivos .py)</span>',
+      'Ligação código-fonte ↔ log — mapeamento função → stage',
+    ]
+  }
+};
 
 function localizedChipLabel(cls) {
   if (cls === 'good') return localeText('Good', 'Bom');
@@ -2254,12 +2862,12 @@ function localizedBottleneckType(type) {
   if (value === 'skew') return localeText('skew', 'skew');
   if (value === 'spill') return localeText('spill', 'spill');
   if (value === 'shuffle') return localeText('shuffle', 'shuffle');
-  if (value === 'planning_overhead') return localeText('planning overhead', 'overhead de planejamento');
-  if (value === 'driver_collect') return localeText('driver collect', 'collect no driver');
+  if (value === 'planning_overhead') return localeText('SQL Planning Overhead', 'Overhead de Planejamento SQL');
+  if (value === 'driver_collect') return localeText('Driver Collect (.collect)', 'Coleta no Driver (.collect)');
   if (value === 'udf') return localeText('udf', 'udf');
   if (value === 'low_parallelism') return localeText('low parallelism', 'baixo paralelismo');
   if (value === 'gc_pressure') return localeText('GC pressure', 'pressao de GC');
-  if (value === 'shuffle_heavy' || value === 'shuffle_overhead') return localeText('shuffle overhead', 'overhead de shuffle');
+  if (value === 'shuffle_heavy' || value === 'shuffle_overhead' || value === 'shuffle_bound') return localeText('Shuffle Overhead', 'Shuffle Overhead');
   if (value === 'cluster_underutilization') return localeText('cluster underutilization', 'subutilizacao do cluster');
   if (value === 'other') return localeText('other', 'outro');
   return value ? value.replace(/_/g, ' ') : localeText('other', 'outro');
@@ -2326,11 +2934,70 @@ function updateStaticAnalysisLanguage() {
     stageHeaders[11].textContent = localeText('Deser ms', 'Desserializacao ms');
   }
 
+  const helpPanelTitle = document.getElementById('help-panel-title');
+  if (helpPanelTitle) helpPanelTitle.textContent = localeText('Privacy and Legal Documentation', 'Documentação de Privacidade e Legal');
+
+  const helpPanelDesc = document.getElementById('help-panel-desc');
+  if (helpPanelDesc) helpPanelDesc.textContent = localeText('This tab contains the reviewed documents on desktop architecture, privacy and terms of use.', 'Esta aba concentra os documentos revisados da arquitetura desktop, privacidade e termos de uso.');
+
+  const helpDocsLabel = document.getElementById('help-docs-label');
+  if (helpDocsLabel) helpDocsLabel.textContent = localeText('06 — Privacy and Legal Documents', '06 — Documentos de Privacidade e Legal');
+
+  const doc01Title = document.getElementById('doc01-title');
+  if (doc01Title) doc01Title.textContent = localeText('01 — Privacy Architecture Diagram', '01 — Diagrama de Arquitetura de Privacidade');
+  const doc01Desc = document.getElementById('doc01-desc');
+  if (doc01Desc) doc01Desc.textContent = localeText('Current desktop data flow, local reduction and data exit points.', 'Fluxo atual do desktop, redução local e pontos de saída de dados.');
+  const doc01Btn = document.getElementById('doc01-btn');
+  if (doc01Btn) doc01Btn.textContent = localeText('Open document', 'Abrir documento');
+
+  const doc02Title = document.getElementById('doc02-title');
+  if (doc02Title) doc02Title.textContent = localeText('02 — Privacy Architecture Document', '02 — Documento de Arquitetura de Privacidade');
+  const doc02Desc = document.getElementById('doc02-desc');
+  if (doc02Desc) doc02Desc.textContent = localeText('Technical description of Electron, IPC, local backend and data retention.', 'Descrição técnica do Electron, IPC, backend local e retenção.');
+  const doc02Btn = document.getElementById('doc02-btn');
+  if (doc02Btn) doc02Btn.textContent = localeText('Open document', 'Abrir documento');
+
+  const doc03Title = document.getElementById('doc03-title');
+  if (doc03Title) doc03Title.textContent = localeText('03 — Privacy Policy + Terms of Use', '03 — Política de Privacidade + Termos de Uso');
+  const doc03Desc = document.getElementById('doc03-desc');
+  if (doc03Desc) doc03Desc.textContent = localeText('Revised policy and terms model for the current distribution.', 'Modelo revisado de política e termos para a distribuição atual.');
+  const doc03Btn = document.getElementById('doc03-btn');
+  if (doc03Btn) doc03Btn.textContent = localeText('Open document', 'Abrir documento');
+
+  const docModalTitle = document.getElementById('doc-modal-title');
+  if (docModalTitle) docModalTitle.textContent = localeText('Document', 'Documento');
+  const docCloseBtn = document.querySelector('.doc-close');
+  if (docCloseBtn) docCloseBtn.textContent = localeText('Close', 'Fechar');
+
   updateExpandButton();
 }
 
 function updateLanguage() {
   const t = translations[currentLang] || translations.en;
+
+  // ── Analysis Overview (intro section) ──────────────────────
+  const lblIntro = document.getElementById('lbl-intro');
+  if (lblIntro) lblIntro.textContent = t.introLabel;
+  const introDescEl = document.getElementById('intro-desc');
+  if (introDescEl) introDescEl.textContent = t.introDesc;
+  const introLocalTitle = document.getElementById('intro-local-title');
+  if (introLocalTitle) introLocalTitle.textContent = t.introLocalTitle;
+  const introLocalSubdesc = document.getElementById('intro-local-subdesc');
+  if (introLocalSubdesc) introLocalSubdesc.textContent = t.introLocalSubdesc;
+  const introAiTitle = document.getElementById('intro-ai-title');
+  if (introAiTitle) introAiTitle.textContent = t.introAiTitle;
+  const introAiSubdesc = document.getElementById('intro-ai-subdesc');
+  if (introAiSubdesc) introAiSubdesc.textContent = t.introAiSubdesc;
+  const introFlowEl = document.getElementById('intro-flow');
+  if (introFlowEl) introFlowEl.innerHTML = t.introFlow;
+  const _introItemHtml = (txt, color) =>
+    `<li style="display:flex;gap:6px;align-items:baseline;font-size:0.77rem;color:var(--text-dim);">` +
+    `<span style="color:${color};flex-shrink:0;font-size:0.7rem;line-height:1.6;">▸</span>` +
+    `<span>${txt}</span></li>`;
+  const localList = document.getElementById('intro-local-list');
+  if (localList) localList.innerHTML = introItems.local[currentLang].map(s => _introItemHtml(s, '#4bc47e')).join('');
+  const aiList = document.getElementById('intro-ai-list');
+  if (aiList) aiList.innerHTML = introItems.ai[currentLang].map(s => _introItemHtml(s, 'var(--accent2)')).join('');
 
   // Safe element updates with null checks
   const lblAuth = document.getElementById('lbl-auth');
@@ -2486,6 +3153,49 @@ function switchTab(tabName) {
 }
 
 // language selector handler
+/* ── Fixed-position tooltip engine ─────────────────────────────────
+   Tooltips use position:fixed so they escape any overflow:auto ancestor
+   (e.g. .table-wrap). We position them programmatically on mouseenter.   */
+(function() {
+  let _activePopup = null;
+  document.addEventListener('mouseenter', function(e) {
+    const wrap = e.target.closest('.metric-help');
+    if (!wrap) return;
+    const popup = wrap.querySelector('.metric-help-popup');
+    if (!popup) return;
+
+    if (_activePopup && _activePopup !== popup) {
+      _activePopup.classList.remove('tip-visible');
+    }
+    _activePopup = popup;
+
+    const rect = wrap.getBoundingClientRect();
+    const popupW = Math.min(320, window.innerWidth * 0.72);
+    let left = rect.left;
+    // Keep within viewport
+    if (left + popupW > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - popupW - 8);
+    }
+    const top = rect.top - 10; // will sit above; final position via translateY(0)
+    popup.style.left = left + 'px';
+    popup.style.top = (rect.top - popup.offsetHeight - 10) + 'px';
+    popup.classList.add('tip-visible');
+
+    // Recalculate after paint so offsetHeight is accurate
+    requestAnimationFrame(function() {
+      popup.style.top = (rect.top - popup.offsetHeight - 10) + 'px';
+    });
+  }, true);
+
+  document.addEventListener('mouseleave', function(e) {
+    const wrap = e.target.closest('.metric-help');
+    if (!wrap) return;
+    const popup = wrap.querySelector('.metric-help-popup');
+    if (popup) popup.classList.remove('tip-visible');
+    if (_activePopup === popup) _activePopup = null;
+  }, true);
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOMContentLoaded fired');
 
@@ -2553,6 +3263,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+/* ── Result-tab switching (storytelling layout) ─────── */
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('.res-tab-btn[data-resgroup]');
+  if (!btn) return;
+  const group = btn.dataset.resgroup;
+  const tabKey = btn.dataset.restab;
+  document.querySelectorAll(`.res-tab-btn[data-resgroup="${group}"]`).forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`.res-tab-pane[data-resgroup="${group}"]`).forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const pane = document.querySelector(`.res-tab-pane[data-resgroup="${group}"][data-respane="${tabKey}"]`);
+  if (pane) pane.classList.add('active');
+});
+
+/* ── Generic sortable table handler ─────────────────── */
+document.body.addEventListener('click', (e) => {
+  const th = e.target.closest('table.sortable-table th.sortable[data-sort-col]');
+  if (!th) return;
+  const table = th.closest('table.sortable-table');
+  if (!table) return;
+  const colIdx = parseInt(th.dataset.sortCol, 10);
+  const sortType = th.dataset.sortType || 'str';
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  if (!thead || !tbody) return;
+
+  // Determine direction: toggle if same column, else default desc for numbers, asc for strings
+  const wasAsc = th.classList.contains('sorted-asc');
+  const wasDesc = th.classList.contains('sorted-desc');
+  thead.querySelectorAll('th.sortable').forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
+  let dir;
+  if (wasAsc) { dir = 'desc'; }
+  else if (wasDesc) { dir = 'asc'; }
+  else { dir = sortType === 'num' ? 'desc' : 'asc'; }
+  th.classList.add('sorted-' + dir);
+
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    const cellA = a.children[colIdx];
+    const cellB = b.children[colIdx];
+    if (!cellA || !cellB) return 0;
+    let va = cellA.dataset.val !== undefined ? cellA.dataset.val : cellA.textContent.trim();
+    let vb = cellB.dataset.val !== undefined ? cellB.dataset.val : cellB.textContent.trim();
+    if (sortType === 'num') {
+      va = parseFloat(va) || 0;
+      vb = parseFloat(vb) || 0;
+    } else {
+      va = String(va).toLowerCase();
+      vb = String(vb).toLowerCase();
+    }
+    const cmp = va > vb ? 1 : va < vb ? -1 : 0;
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+});
+
+/* ── Stage filter bar handler ────────────────────────── */
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('.stages-tab-container .stage-filter-btn[data-filter]');
+  if (!btn) return;
+  const container = btn.closest('.stages-tab-container');
+  const filter = btn.dataset.filter;
+  container.querySelectorAll('.stage-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+  const tbody = container.querySelector('table tbody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach(row => {
+    if (filter === 'all') { row.style.display = ''; return; }
+    if (filter === 'problems') {
+      row.style.display = (row.classList.contains('row-warn') || row.classList.contains('row-crit')) ? '' : 'none';
+      return;
+    }
+    row.style.display = row.dataset[filter] === '1' ? '' : 'none';
+  });
+});
+
 /* ── File handlers ──────────────────────────────────── */
 function onFileChange(type) {
   console.log('onFileChange called with type:', type);
@@ -2593,6 +3377,11 @@ function updateZoneUI(type, name) {
     zone.classList.add('has-file'); 
     label.textContent = localeText('Selected: ', 'Selecionado: ') + name; 
     console.log('Added has-file class and updated label');
+    // Reflect file name in header meta tag when it's the ZIP
+    if (type === 'zip') {
+      const headerTag = document.getElementById('header-app-id');
+      if (headerTag) { headerTag.textContent = name; headerTag.style.display = ''; }
+    }
   }
   else { 
     zone.classList.remove('has-file'); 
@@ -2674,7 +3463,7 @@ function renderHistory() {
         <br><small style="color: var(--text-dim);">${localeText('Duration', 'Duracao')}: ${item.duration}, ${localeText('Stages', 'Etapas')}: ${item.numStages}</small>
       </div>
       <div>
-        <button class="btn-dl" type="button" data-history-idx="${idx}">${localeText('Download Markdown', 'Baixar Markdown')}</button>
+        <button class="btn-dl" type="button" data-history-idx="${idx}">${localeText('Export HTML', 'Exportar HTML')}</button>
       </div>
     </div>
   `).join('');
@@ -2684,9 +3473,17 @@ function renderHistory() {
     const idx = parseInt(btn.getAttribute('data-history-idx'), 10);
     const item = analysisHistory[idx];
     if (item) {
-      btn.addEventListener('click', () =>
-        downloadMarkdownLocal(item.markdownContent || '', item.suggestedFilename || `spark_${item.appName || 'report'}.md`)
-      );
+      btn.addEventListener('click', () => {
+        // Support both new htmlContent and legacy markdownContent in history
+        const content = item.htmlContent || item.markdownContent || '';
+        const ext = item.htmlContent ? 'html' : 'md';
+        const safeName = (item.suggestedFilename || `spark_${item.appName || 'report'}.${ext}`).replace(/\.(md|html)$/, `.${ext}`);
+        if (item.htmlContent) {
+          downloadHtmlLocal(content, safeName);
+        } else {
+          downloadMarkdownLocal(content, safeName);
+        }
+      });
     }
   });
 }
@@ -2726,6 +3523,112 @@ function showDownloadPopup(message, variant = 'success') {
       popup.parentNode.removeChild(popup);
     }
   }, 2600);
+}
+
+function buildExportHtml(unifiedHtml, appName) {
+  const styles = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+  const fontsHref = 'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;1,9..40,200;1,9..40,300&family=IBM+Plex+Mono:wght@300;400;500&family=Inconsolata:wght@300;400;500;600&display=swap';
+  const dateStr = new Date().toLocaleString();
+  const titleStr = 'SprkLogs' + (appName ? ' \u2013 ' + appName : '');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${titleStr.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="${fontsHref}" rel="stylesheet" />
+  <style>
+${styles}
+    /* Export layout overrides */
+    body { padding: 2rem 2.5rem; max-width: 1280px; margin: 0 auto; }
+    .download-bar, #dl-bar { display: none !important; }
+    .tabs-nav, #tab-history, #tab-help { display: none !important; }
+    #results { display: block !important; opacity: 1 !important; }
+    .res-tab-pane { display: none; }
+    .res-tab-pane.active { display: block; }
+  </style>
+</head>
+<body>
+  <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-mute);margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border);">
+    SprkLogs \u00b7 ${dateStr}
+  </div>
+  ${unifiedHtml}
+  <script>
+    // Tab switching
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-resgroup][data-restab]');
+      if (!btn) return;
+      const group = btn.dataset.resgroup;
+      const tab = btn.dataset.restab;
+      document.querySelectorAll('[data-resgroup="' + group + '"][data-restab]').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('[data-resgroup="' + group + '"][data-respane]').forEach(function(p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      const pane = document.querySelector('[data-resgroup="' + group + '"][data-respane="' + tab + '"]');
+      if (pane) pane.classList.add('active');
+    });
+    // Stage filter buttons
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.stage-filter-btn');
+      if (!btn) return;
+      const bar = btn.closest('.stage-filter-bar');
+      if (!bar) return;
+      bar.querySelectorAll('.stage-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      const tbody = btn.closest('.stages-tab-container').querySelector('tbody');
+      if (!tbody) return;
+      tbody.querySelectorAll('tr').forEach(function(row) {
+        if (filter === 'all') { row.style.display = ''; return; }
+        if (filter === 'problems') { row.style.display = (row.dataset.spill || row.dataset.skew || row.dataset.gc) ? '' : 'none'; return; }
+        row.style.display = row.dataset[filter] === '1' ? '' : 'none';
+      });
+    });
+    // Sortable table headers
+    document.querySelectorAll('th.sortable').forEach(function(th) {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', function() {
+        const table = th.closest('table');
+        const tbody = table ? table.querySelector('tbody') : null;
+        if (!tbody) return;
+        const col = parseInt(th.dataset.sortCol, 10);
+        const type = th.dataset.sortType;
+        const dir = th.dataset.sortDir === 'asc' ? 'desc' : 'asc';
+        table.querySelectorAll('th.sortable').forEach(function(h) { h.dataset.sortDir = ''; });
+        th.dataset.sortDir = dir;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort(function(a, b) {
+          const av = a.cells[col] ? (a.cells[col].dataset.val || a.cells[col].textContent) : '';
+          const bv = b.cells[col] ? (b.cells[col].dataset.val || b.cells[col].textContent) : '';
+          if (type === 'num') { return dir === 'asc' ? Number(av) - Number(bv) : Number(bv) - Number(av); }
+          return dir === 'asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+        });
+        rows.forEach(function(r) { tbody.appendChild(r); });
+      });
+    });
+  <\/script>
+</body>
+</html>`;
+}
+
+async function downloadHtmlLocal(content, suggestedName) {
+  if (!content) {
+    showError('Conteúdo do relatório não disponível.');
+    showDownloadPopup('Relatório não disponível.', 'error');
+    return;
+  }
+
+  try {
+    const result = await window.desktopApi.saveReportToDisk({ content, suggestedName });
+    if (result && result.saved) {
+      showDownloadPopup('Relatório salvo em: ' + result.filePath);
+    }
+    // result.saved === false means user canceled the dialog — silent
+  } catch (e) {
+    showError('Falha ao salvar: ' + (e.message || String(e)));
+    showDownloadPopup('Falha ao salvar o relatório.', 'error');
+  }
 }
 
 async function downloadMarkdownLocal(content, suggestedName) {
@@ -2960,6 +3863,626 @@ function startPolling() {
 }
 
 /* ── Render Results ─────────────────────────────────── */
+/* ── Unified Diagnostic Panel ─────────────────────────────────────────
+   Always rendered first after analysis — independent of LLM presence.
+   Aggregates all sections (score, narrative, stages, efficiency, plan)
+   into a single storytelling panel with dynamic tabs.
+   ─────────────────────────────────────────────────────────────────── */
+function renderUnifiedDiagnostic(data, sparklensContext, sparklensScoreDetails, llmScoreDetails) {
+  const s = data.summary || {};
+  const hasLlm = Boolean(data.llm_analysis && data.llm_analysis.trim());
+  const hasSparklens = Boolean(sparklensContext && typeof sparklensContext === 'object');
+
+  const overall = getOverallScoreDetails(sparklensScoreDetails, llmScoreDetails);
+  const scoreObj = overall || llmScoreDetails || sparklensScoreDetails;
+  const score = scoreObj ? scoreObj.score : null;
+  const scoreCls = scoreObj ? scoreObj.scoreCls : '';
+
+  // ── Header ──────────────────────────────────────────────────────────
+  const circ = 251.2;
+  const dash = score != null ? ((score / 100) * circ).toFixed(1) : '0';
+  const ringColor = score == null ? 'var(--border2)' : (score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)');
+  const verdict = overall ? overall.headline
+    : (llmScoreDetails ? llmScoreDetails.headline
+    : (sparklensScoreDetails ? sparklensScoreDetails.headline
+    : localeText('Spark Job Analysis', 'Análise do Job Spark')));
+  const subLine = overall ? overall.interpretation
+    : (s.app_name ? `${s.app_name} · ${fmtMs(s.total_duration_ms)}` : '');
+  const verdictSeverity = score == null ? '' : (score >= 70 ? '' : score >= 40 ? localeText('WARNING', 'ATENÇÃO') : localeText('CRITICAL', 'CRÍTICO'));
+
+  const diagHeaderHtml = `
+    <div class="diagnosis-header">
+      <div>
+        <div class="diagnosis-eyebrow">${localeText('Diagnosis · Spark Performance', 'Diagnóstico · Performance Spark')}</div>
+        <h2 class="diagnosis-title">${esc(verdict)}</h2>
+        ${subLine ? `<div class="diagnosis-sub">${esc(subLine)}</div>` : ''}
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          ${s.spark_version ? `<span style="font-family:var(--mono);font-size:0.7rem;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:2px 7px;color:var(--text-mute)">Spark ${esc(s.spark_version)}</span>` : ''}
+          ${s.app_name ? `<span style="font-family:var(--mono);font-size:0.7rem;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:2px 7px;color:var(--text-dim)">${esc(s.app_name)}</span>` : ''}
+          ${verdictSeverity ? `<span style="font-family:var(--mono);font-size:0.7rem;background:rgba(227,89,20,0.15);border:1px solid var(--accent);border-radius:3px;padding:2px 7px;color:var(--accent)">${verdictSeverity}</span>` : ''}
+        </div>
+      </div>
+      <div class="score-ring-wrap">
+        <svg class="score-ring-svg" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="40" fill="none" stroke="var(--border2)" stroke-width="7"/>
+          <circle cx="45" cy="45" r="40" fill="none" stroke="${ringColor}" stroke-width="7"
+            stroke-linecap="round"
+            stroke-dasharray="${dash} ${circ}"
+            stroke-dashoffset="62.8"
+            transform="rotate(-90 45 45)"/>
+        </svg>
+        <div class="score-ring-inner">
+          ${score != null
+            ? `<span class="score-ring-num" style="color:${ringColor}">${score}</span><span class="score-ring-lbl">/100</span>`
+            : `<span class="score-ring-lbl" style="font-size:0.7rem">N/A</span>`}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ── Fix banner (LLM only) ──────────────────────────────────────────
+  let fixBannerHtml = '';
+  let parsedLlm = null;
+  let llmBottlenecks = [], llmStages = [], llmClusterConfigs = [], llmCodeFixes = [];
+
+  if (hasLlm) {
+    parsedLlm = parseLlmJson(data.llm_analysis);
+    const llmSummary = (parsedLlm && parsedLlm.summary) || {};
+    const llmKpis = llmSummary.kpis || {};
+    const gainMin = Number.isFinite(llmSummary.estimated_gain_min) ? llmSummary.estimated_gain_min : null;
+    const durationMin = Number.isFinite(llmKpis.duration_total_min) ? llmKpis.duration_total_min
+      : (s.total_duration_ms ? s.total_duration_ms / 60000 : null);
+
+    if (gainMin != null && durationMin != null && gainMin < durationMin) {
+      const pct = Math.round((1 - gainMin / durationMin) * 100);
+      const critCount = llmScoreDetails ? llmScoreDetails.counts.critical : 0;
+      const highCount = llmScoreDetails ? llmScoreDetails.counts.high : 0;
+      fixBannerHtml = `
+        <div class="fix-banner">
+          <div class="fix-banner-left">
+            <span class="fix-banner-label">${localeText('Estimated time post-fix', 'Tempo estimado pós-fix')}</span>
+            <span class="fix-banner-value">~${gainMin} min</span>
+            <span class="fix-banner-current">${localeText('current:', 'atual:')} ${durationMin.toFixed(1)} min</span>
+          </div>
+          <div class="fix-banner-right">
+            <div class="fix-metric-row"><span>${localeText('Time reduction', 'Redução de tempo')}</span><span class="fix-pill" style="background:var(--green);color:#000">-${pct}%</span></div>
+            ${critCount > 0 ? `<div class="fix-metric-row"><span>${localeText('Critical issues', 'Problemas críticos')}</span><span class="fix-pill" style="background:var(--red);color:#fff">${critCount}</span></div>` : ''}
+            ${highCount > 0 ? `<div class="fix-metric-row"><span>${localeText('High issues', 'Problemas altos')}</span><span class="fix-pill" style="background:var(--yellow);color:#000">${highCount}</span></div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    llmBottlenecks = Array.isArray(parsedLlm && parsedLlm.bottlenecks) ? parsedLlm.bottlenecks : [];
+    llmStages = Array.isArray(parsedLlm && parsedLlm.stages) ? parsedLlm.stages : [];
+    const ap = (parsedLlm && parsedLlm.action_plan) || {};
+    llmClusterConfigs = Array.isArray(ap.cluster_configs) ? ap.cluster_configs : [];
+    llmCodeFixes = Array.isArray(ap.code_fixes) ? ap.code_fixes : [];
+  }
+
+  // ── KPI strip ─────────────────────────────────────────────────────
+  let kpiCells = [];
+  if (hasLlm && parsedLlm) {
+    const llmSummary = parsedLlm.summary || {};
+    const kpis = llmSummary.kpis || {};
+    const dur = kpis.duration_total_min != null ? `${kpis.duration_total_min} min` : fmtMs(s.total_duration_ms);
+    kpiCells = [
+      { label: localeText('Duration', 'Duração'), value: dur, cls: '' },
+      { label: localeText('Total Tasks', 'Total de Tasks'), value: kpis.total_tasks != null ? kpis.total_tasks.toLocaleString() : (s.num_tasks != null ? s.num_tasks.toLocaleString() : '—'), cls: '' },
+      { label: localeText('Input Volume', 'Volume de Entrada'), value: kpis.input_volume_gb != null ? `${kpis.input_volume_gb} GB` : fmtBytes(s.total_input_bytes), cls: '' },
+      { label: localeText('Stages with Skew', 'Stages com Skew'), value: kpis.stages_with_skew ?? '—', cls: kpis.stages_with_skew > 0 ? 'kv-warn' : '' },
+      { label: localeText('Disk Spill', 'Spill em Disco'), value: kpis.disk_spill_total_gb != null ? `${kpis.disk_spill_total_gb} GB` : '—', cls: kpis.disk_spill_total_gb > 0 ? 'kv-warn' : 'kv-ok' },
+      { label: localeText('Memory Spill', 'Spill em Memória'), value: kpis.memory_spill_total_gb != null ? `${kpis.memory_spill_total_gb} GB` : '—', cls: kpis.memory_spill_total_gb > 0 ? 'kv-warn' : 'kv-ok' },
+      { label: localeText('Failed Stages', 'Stages Falhos'), value: kpis.stages_with_failure_or_retry ?? '—', cls: kpis.stages_with_failure_or_retry > 0 ? 'kv-crit' : 'kv-ok' },
+      { label: localeText('AI Score', 'Score IA'), value: (llmScoreDetails && llmScoreDetails.score != null) ? llmScoreDetails.score : (score ?? '—'), cls: '' },
+    ];
+  } else {
+    const jem = s.job_efficiency_meta || {};
+    kpiCells = [
+      { label: localeText('Duration', 'Duração'), value: fmtMs(s.total_duration_ms), cls: '' },
+      { label: localeText('Stages', 'Stages'), value: s.num_stages ?? '—', cls: '' },
+      { label: localeText('Tasks', 'Tasks'), value: s.num_tasks != null ? s.num_tasks.toLocaleString() : '—', cls: '' },
+      { label: localeText('Executors', 'Executores'), value: s.executor_count ?? '—', cls: '' },
+      { label: localeText('Input Volume', 'Volume de Entrada'), value: fmtBytes(s.total_input_bytes), cls: '' },
+      { label: localeText('Shuffle Read', 'Shuffle Read'), value: fmtBytes(s.total_shuffle_read_bytes), cls: s.total_shuffle_read_bytes > 1e9 ? 'kv-warn' : '' },
+      { label: localeText('CPU Efficiency', 'CPU Efficiency'), value: jem.cpu_efficiency != null ? jem.cpu_efficiency.toFixed(3) : '—', cls: jem.cpu_efficiency != null ? (jem.cpu_efficiency >= 0.5 ? 'kv-ok' : jem.cpu_efficiency >= 0.2 ? 'kv-warn' : 'kv-crit') : '' },
+      { label: localeText('Score', 'Score'), value: score ?? '—', cls: '' },
+    ];
+  }
+
+  const kpiGridHtml = `
+    <div class="st-kpi-grid">
+      ${kpiCells.map(c => `
+        <div class="st-kpi-cell">
+          <div class="st-kpi-label">${c.label}</div>
+          <div class="st-kpi-value ${c.cls}">${esc(String(c.value))}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // ── Build tabs ─────────────────────────────────────────────────────
+  const tabId = 'diag-' + Math.random().toString(36).slice(2, 8);
+  const tabs = [];
+  let narrativeTabContent = null;
+
+  // Tab "Problemas" — unified bottlenecks from all sources (What → Why → Fix)
+  {
+    const arithmeticName = getArithmeticEngineName();
+    let problemsContent = '';
+
+    // ── AI bottleneck cards (LLM source) ─────────────────────────────
+    if (hasLlm && llmBottlenecks.length > 0) {
+      const llmCards = llmBottlenecks.map(b => {
+        const link = b.code_link || {};
+        const diffHtml = (b.before_code || b.after_code) ? `
+          <div class="code-diff-grid">
+            <div class="code-panel-story"><div class="code-panel-label before">Before</div><pre class="code-block-story">${esc(b.before_code || '')}</pre></div>
+            <div class="code-panel-story"><div class="code-panel-label after">After</div><pre class="code-block-story">${esc(b.after_code || '')}</pre></div>
+          </div>` : '';
+        return `
+          <div class="st-bottleneck-card">
+            <div class="st-bn-header">
+              <span class="st-bn-id">${esc(b.id || 'B?')}</span>
+              <span class="st-bn-title">${esc(b.title || '')}</span>
+              <span class="step-badge ${b.severity === 'critical' ? 'badge-crit' : b.severity === 'high' ? 'badge-warn' : ''}">${esc(localizedSeverityLabel(b.severity || 'medium'))}</span>
+              <span class="source-badge source-ai">AI</span>
+            </div>
+            <div class="st-bn-body">
+              <div class="kv-grid">
+                <div class="kv-item"><div class="k">${localeText('Root Cause', 'Causa Raiz')}</div><div>${esc(b.root_cause || '—')}</div></div>
+                <div class="kv-item"><div class="k">${localeText('Observed Effect', 'Efeito Observado')}</div><div>${esc(b.observed_effect || '—')}</div></div>
+                <div class="kv-item"><div class="k">${localeText('Expected Gain', 'Ganho Esperado')}</div><div>${esc(b.expected_gain || '—')}</div></div>
+                ${link.function_name ? `<div class="kv-item"><div class="k">${localeText('Location', 'Localização')}</div><div>${esc(link.function_name)} L${link.line_start ?? '?'}–${link.line_end ?? '?'}</div></div>` : ''}
+              </div>
+              ${diffHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+      problemsContent += `<div class="st-section-title">${localeText(`Bottlenecks (${llmBottlenecks.length})`, `Gargalos (${llmBottlenecks.length})`)}</div>${llmCards}`;
+    }
+
+    // ── Arithmetic bottleneck cards (Sparklens source) ───────────────
+    if (hasSparklens) {
+      const topBn = Array.isArray(sparklensContext.top_bottlenecks) ? sparklensContext.top_bottlenecks : [];
+      const bnCards = topBn.map(item => {
+        const stage = getSparklensStage(sparklensContext, item.stage_id);
+        const detail = describeSparklensBottleneck(item.type, stage);
+        return `
+          <div class="st-bottleneck-card">
+            <div class="st-bn-header">
+              <span class="st-bn-id">#${esc(String(item.rank))}</span>
+              <span class="st-bn-title">${localeText('Stage', 'Stage')} ${esc(String(item.stage_id))} · ${esc(localizedBottleneckType(item.type || 'other'))}</span>
+              <span class="step-badge ${detail.severity === 'critical' ? 'badge-crit' : detail.severity === 'high' ? 'badge-warn' : ''}">${esc(localizedSeverityLabel(detail.severity))}</span>
+              <span class="source-badge source-arithmetic">${arithmeticName}</span>
+            </div>
+            <div class="st-bn-body">
+              <div class="kv-grid">
+                <div class="kv-item"><div class="k">${localeText('Description', 'Descrição')}</div><div>${esc(item.description || '—')}</div></div>
+                <div class="kv-item"><div class="k">${localeText('Metric', 'Métrica')}</div><div>${esc(detail.metric)}</div></div>
+                ${stage ? `<div class="kv-item"><div class="k">Wall Time</div><div>${fmtMs(stage.wall_ms)} / ${localeText('ideal', 'ideal')} ${fmtMs(stage.ideal_wall_ms)}</div></div>` : ''}
+                <div class="kv-item"><div class="k">${localeText('Impact', 'Impacto')}</div><div>${esc(detail.impact)}</div></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      if (bnCards) {
+        const sectionTitle = hasLlm
+          ? localeText(`Arithmetic Bottlenecks — ${arithmeticName}`, `Gargalos Aritméticos — ${arithmeticName}`)
+          : localeText('Detected Bottlenecks', 'Gargalos Detectados');
+        problemsContent += `<div class="st-section-title" style="${hasLlm ? 'margin-top:1.5rem;' : ''}">${sectionTitle}</div>${bnCards}`;
+      }
+    }
+
+    // ── Sparklens-only: Mathematical Insights section ─────────────────
+    if (hasSparklens && !hasLlm && sparklensScoreDetails) {
+      const insights = sparklensScoreDetails.insights || [];
+      if (insights.length > 0) {
+        const items = insights.map((insight, idx) => {
+          const sev = insight.severity || 'medium';
+          const dotCls = sev === 'critical' ? 'dot-crit' : sev === 'high' ? 'dot-warn' : 'dot-ok';
+          const badgeCls = sev === 'critical' ? 'badge-crit' : sev === 'high' ? 'badge-warn' : '';
+          return `
+            <div class="story-step">
+              <div class="step-dot ${dotCls}">${idx + 1}</div>
+              <div class="step-content">
+                <div class="step-header">
+                  <span class="step-name">${esc(insight.title)}</span>
+                  ${badgeCls ? `<span class="step-badge ${badgeCls}">${esc(localizedSeverityLabel(sev))}</span>` : ''}
+                </div>
+                <div class="step-desc">${esc(insight.evidence)}</div>
+                <div class="step-evidence"><div class="evidence-row-grid">
+                  <div class="evidence-cell"><span class="ev-label">${localeText('Impact', 'Impacto')}</span><span class="ev-value">${esc(insight.impact)}</span></div>
+                </div></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        problemsContent += `
+          <div class="st-section-title" style="margin-top:1.5rem;">${localeText('Mathematical Findings', 'Achados Matemáticos')}</div>
+          <div class="story-timeline">${items}</div>
+        `;
+      }
+    }
+
+    // ── LLM narrative → separate first tab (when LLM available) ──────
+    if (hasLlm && parsedLlm && llmBottlenecks.length > 0) {
+      const topBn = llmBottlenecks.slice(0, 8);
+      const timelineItems = topBn.map((b, idx) => {
+        const sev = b.severity || 'medium';
+        const dotCls = sev === 'critical' ? 'dot-crit' : sev === 'high' ? 'dot-warn' : 'dot-ok';
+        const badgeCls = sev === 'critical' ? 'badge-crit' : sev === 'high' ? 'badge-warn' : '';
+        return `
+          <div class="story-step">
+            <div class="step-dot ${dotCls}">${idx + 1}</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span class="step-name">${esc(b.title || localeText('Bottleneck', 'Gargalo'))}</span>
+                ${badgeCls ? `<span class="step-badge ${badgeCls}">${esc(localizedSeverityLabel(sev))}</span>` : ''}
+              </div>
+              <div class="step-desc">${esc(b.root_cause || '')}</div>
+              <div class="step-evidence">
+                <div class="evidence-row-grid">
+                  <div class="evidence-cell"><span class="ev-label">${localeText('Observed', 'Observado')}</span><span class="ev-value">${esc(b.observed_effect || b.evidence || '—')}</span></div>
+                  <div class="evidence-cell"><span class="ev-label">${localeText('Expected', 'Esperado')}</span><span class="ev-value">${esc(b.expected_gain || '—')}</span></div>
+                  <div class="evidence-cell"><span class="ev-label">${localeText('Evidence', 'Evidência')}</span><span class="ev-value">${esc(b.evidence || '—')}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      narrativeTabContent = `
+        <div class="st-section-title">${localeText('Job Narrative', 'Narrativa do Job')}</div>
+        <div class="story-timeline">${timelineItems || `<div class="spark-empty">${localeText('No narrative available.', 'Narrativa indisponível.')}</div>`}</div>
+        ${parsedLlm.limitations ? `<div style="padding:0 0 1rem;font-size:0.78rem;color:var(--text-mute);font-family:var(--mono);">${localeText('Limitations:', 'Limitações:')} ${esc(parsedLlm.limitations)}</div>` : ''}
+      `;
+    }
+
+    if (!problemsContent) {
+      problemsContent = `<div class="spark-empty">${localeText('No problems detected.', 'Nenhum problema detectado.')}</div>`;
+    }
+    tabs.push({ key: 'problems', label: localeText('Problems', 'Problemas'), content: problemsContent });
+  }
+
+  // Insert narrative timeline as the FIRST tab when available
+  if (narrativeTabContent) {
+    tabs.unshift({ key: 'timeline', label: localeText('Timeline', 'Linha do Tempo'), content: narrativeTabContent });
+  }
+
+  // Tab "Stages"
+  const summaryStages = s.stages || [];
+  if (summaryStages.length > 0) {
+    const stageRows = summaryStages.map(st => {
+      const skewCls = (st.skew_ratio > 3) ? 'style="color:var(--yellow)"' : '';
+      const gcCls2 = (st.gc_overhead_pct > 5) ? 'style="color:var(--red)"' : '';
+      const hasSpill = (st.disk_bytes_spilled > 0);
+      const hasSkew = (st.skew_ratio > 3);
+      const hasGC = (st.gc_overhead_pct > 5);
+      const rowFlags = [
+        hasSpill ? 'data-spill="1"' : '',
+        hasSkew  ? 'data-skew="1"'  : '',
+        hasGC    ? 'data-gc="1"'    : '',
+      ].filter(Boolean).join(' ');
+      const rowCls = (st.skew_ratio > 5 || st.gc_overhead_pct > 15) ? 'row-crit'
+                   : (hasSkew || hasSpill || hasGC) ? 'row-warn' : '';
+      return `<tr class="${rowCls}" ${rowFlags}>
+        <td data-val="${st.stage_id ?? -1}">${st.stage_id ?? '—'}</td>
+        <td data-val="${esc(st.name || '')}" title="${esc(st.name || '')}">${esc((st.name || '').substring(0, 30))}${(st.name || '').length > 30 ? '…' : ''}</td>
+        <td data-val="${st.num_tasks ?? 0}">${st.num_tasks ?? '—'}</td><td data-val="${st.duration_ms ?? 0}">${fmtMs(st.duration_ms)}</td>
+        <td data-val="${st.input_bytes ?? 0}">${fmtBytes(st.input_bytes)}</td><td data-val="${st.shuffle_read_bytes ?? 0}">${fmtBytes(st.shuffle_read_bytes)}</td>
+        <td data-val="${st.shuffle_write_bytes ?? 0}">${fmtBytes(st.shuffle_write_bytes)}</td>
+        <td data-val="${st.skew_ratio ?? 0}" ${skewCls}>${st.skew_ratio != null ? st.skew_ratio.toFixed(2) : '—'}</td>
+        <td data-val="${st.task_duration_p95_ms ?? 0}">${fmtMs(st.task_duration_p95_ms)}</td>
+        <td data-val="${st.cpu_efficiency ?? 0}">${st.cpu_efficiency != null ? st.cpu_efficiency.toFixed(3) : '—'}</td>
+        <td data-val="${st.gc_overhead_pct ?? 0}" ${gcCls2}>${st.gc_overhead_pct != null ? st.gc_overhead_pct.toFixed(1) + '%' : '—'}</td>
+      </tr>`;
+    }).join('');
+    tabs.push({
+      key: 'stages', label: localeText(`Stages (${summaryStages.length})`, `Stages (${summaryStages.length})`),
+      content: `
+        <div class="stages-tab-container">
+          <div class="stage-filter-bar">
+            <button class="stage-filter-btn active" data-filter="all">${localeText('All', 'Todos')}</button>
+            <button class="stage-filter-btn" data-filter="problems">${localeText('Problems', 'Só problemáticos')}</button>
+            <button class="stage-filter-btn" data-filter="skew">${localeText('Skew', 'Com Skew')}</button>
+            <button class="stage-filter-btn" data-filter="spill">${localeText('Spill', 'Com Spill')}</button>
+            <button class="stage-filter-btn" data-filter="gc">${localeText('High GC', 'GC alto')}</button>
+          </div>
+          <div class="table-wrap" style="margin-bottom:0;overflow-x:auto;">
+            <table class="sortable-table">
+              <thead><tr>
+                <th class="sortable" data-sort-col="0" data-sort-type="num">${metricHelp('#', [localeText('Stage ID', 'ID do Stage'), localeText('Numeric stage identifier in execution order.', 'Identificador numérico do stage na ordem de execução.')])}</th>
+                <th class="sortable" data-sort-col="1" data-sort-type="str">${localeText('Name', 'Nome')}</th>
+                <th class="sortable" data-sort-col="2" data-sort-type="num">Tasks</th>
+                <th class="sortable" data-sort-col="3" data-sort-type="num">${metricHelp(localeText('Duration', 'Duração'), [localeText('Stage wall-clock duration', 'Duração de parede do stage'), localeText('Elapsed time from first task start to last task end.', 'Tempo decorrido do início da primeira task ao fim da última.')])}</th>
+                <th class="sortable" data-sort-col="4" data-sort-type="num">Input</th>
+                <th class="sortable" data-sort-col="5" data-sort-type="num">${metricHelp('Shuffle R', [localeText('Shuffle Read', 'Shuffle Read'), localeText('Data fetched from previous stage outputs via shuffle.', 'Dados lidos de stages anteriores via shuffle.')])}</th>
+                <th class="sortable" data-sort-col="6" data-sort-type="num">${metricHelp('Shuffle W', [localeText('Shuffle Write', 'Shuffle Write'), localeText('Data written for downstream stages (triggers a shuffle).', 'Dados gravados para stages seguintes (dispara um shuffle).')])}</th>
+                <th class="sortable" data-sort-col="7" data-sort-type="num">${metricHelp('Skew', 'max_skew')}</th>
+                <th class="sortable" data-sort-col="8" data-sort-type="num">${metricHelp('p95 Task (ms)', [localeText('p95 Task Duration (ms)', 'Duração p95 das Tasks (ms)'), localeText('95th-percentile task duration. High relative to median indicates skew.', '95º percentil da duração das tasks. Alto em relação à mediana indica skew.')])}</th>
+                <th class="sortable" data-sort-col="9" data-sort-type="num">${metricHelp('CPU Eff', 'cluster_utilization')}</th>
+                <th class="sortable" data-sort-col="10" data-sort-type="num">${metricHelp('GC%', 'max_gc')}</th>
+              </tr></thead>
+              <tbody>${stageRows}</tbody>
+            </table>
+          </div>
+        </div>
+      `
+    });
+  } else if (hasLlm && llmStages.length > 0) {
+    const stageRows = llmStages.map(st => `<tr>
+      <td data-val="${st.id ?? -1}">${st.id ?? '—'}</td><td data-val="${st.duration_s ?? 0}">${st.duration_s ?? '—'}</td><td data-val="${st.task_count ?? 0}">${st.task_count ?? '—'}</td>
+      <td data-val="${st.skew_ratio ?? 0}">${st.skew_ratio ?? '—'}</td><td data-val="${st.shuffle_write_gb ?? 0}">${st.shuffle_write_gb ?? '—'}</td><td data-val="${st.disk_spill_gb ?? 0}">${st.disk_spill_gb ?? '—'}</td>
+      <td><span class="status-pill ${esc(st.status || 'ok')}">${esc(localizedStatusLabel(st.status || 'ok'))}</span></td>
+    </tr>`).join('');
+    tabs.push({
+      key: 'stages', label: localeText(`Stages (${llmStages.length})`, `Stages (${llmStages.length})`),
+      content: `
+        <div class="table-wrap" style="margin-bottom:0;overflow-x:auto;">
+          <table class="sortable-table">
+            <thead><tr>
+              <th class="sortable" data-sort-col="0" data-sort-type="num">ID</th>
+              <th class="sortable" data-sort-col="1" data-sort-type="num">${localeText('Duration(s)', 'Duração(s)')}</th>
+              <th class="sortable" data-sort-col="2" data-sort-type="num">Tasks</th>
+              <th class="sortable" data-sort-col="3" data-sort-type="num">Skew</th>
+              <th class="sortable" data-sort-col="4" data-sort-type="num">Shuffle W(GB)</th>
+              <th class="sortable" data-sort-col="5" data-sort-type="num">Disk Spill(GB)</th>
+              <th data-sort-col="6" data-sort-type="str">Status</th>
+            </tr></thead>
+            <tbody>${stageRows}</tbody>
+          </table>
+        </div>
+      `
+    });
+  }
+
+  // Tab 4: Eficiência (job metrics + executor table)
+  const jem = s.job_efficiency_meta || {};
+  const execSummary = s.executor_summary || [];
+  if (jem.cpu_efficiency != null || jem.gc_overhead_pct != null || execSummary.length > 0) {
+    let effContent = '';
+    if (jem.cpu_efficiency != null || jem.gc_overhead_pct != null) {
+      const cpuEff = jem.cpu_efficiency ?? 0;
+      const gcPct2 = jem.gc_overhead_pct ?? 0;
+      const desrPct = jem.deserialize_overhead_pct ?? 0;
+      const cpuEffCls = cpuEff >= 0.5 ? 'kv-ok' : cpuEff >= 0.2 ? 'kv-warn' : 'kv-crit';
+      const gcEffCls = gcPct2 < 2 ? 'kv-ok' : gcPct2 < 5 ? 'kv-warn' : 'kv-crit';
+      effContent += `
+        <div class="st-section-title">${localeText('Job Efficiency', 'Eficiência do Job')}</div>
+        <div class="st-kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.5rem;">
+          <div class="st-kpi-cell">
+            <div class="st-kpi-label">CPU Efficiency</div>
+            <div class="st-kpi-value ${cpuEffCls}">${cpuEff.toFixed(3)}</div>
+            <div class="st-kpi-sub">${localeText('CPU / wall-clock. <0.2 = I/O-bound', 'CPU / total. <0.2 = gargalo de I/O')}</div>
+          </div>
+          <div class="st-kpi-cell">
+            <div class="st-kpi-label">GC Overhead</div>
+            <div class="st-kpi-value ${gcEffCls}">${gcPct2.toFixed(2)}%</div>
+            <div class="st-kpi-sub">${localeText('JVM GC. >5% is concerning', 'JVM GC. >5% merece atenção')}</div>
+          </div>
+          <div class="st-kpi-cell">
+            <div class="st-kpi-label">${localeText('Deserialize', 'Desserialização')}</div>
+            <div class="st-kpi-value">${desrPct.toFixed(2)}%</div>
+            <div class="st-kpi-sub">${localeText('% of time deserializing inputs', '% do tempo desserializando')}</div>
+          </div>
+        </div>
+      `;
+    }
+    if (execSummary.length > 0) {
+      const execRows = execSummary.map(ex => {
+        const gcC = ex.gc_pct > 5 ? 'style="color:var(--red)"' : '';
+        const cpuC = ex.cpu_efficiency < 0.05 ? 'style="color:var(--yellow)"' : '';
+        return `<tr>
+          <td>${esc(ex.executor_id)}</td>
+          <td title="${esc(ex.host)}">${esc(ex.host.length > 35 ? ex.host.substring(0, 35) + '…' : ex.host)}</td>
+          <td>${ex.cores}</td><td>${ex.tasks.toLocaleString()}</td>
+          <td>${ex.gc_ms.toLocaleString()}</td>
+          <td ${gcC}>${ex.gc_pct.toFixed(2)}%</td>
+          <td ${cpuC}>${ex.cpu_efficiency.toFixed(3)}</td>
+        </tr>`;
+      }).join('');
+      effContent += `
+        <div class="st-section-title">${localeText('Executor Metrics', 'Métricas por Executor')}</div>
+        <div class="table-wrap" style="margin-bottom:0;overflow-x:auto;">
+          <table>
+            <thead><tr><th>Executor</th><th>Host</th><th>Cores</th><th>Tasks</th><th>GC ms</th><th>GC%</th><th>CPU Eff</th></tr></thead>
+            <tbody>${execRows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+    if (effContent) tabs.push({ key: 'cluster', label: localeText('Cluster', 'Cluster'), content: effContent });
+  }
+
+  // Tab "Cluster" extra: driver_analysis + environment (from Sparklens context)
+  if (hasSparklens && sparklensContext.driver_analysis) {
+    const da = sparklensContext.driver_analysis;
+    const driverPct = toFiniteNumber(da.driver_pct, 0) || 0;
+    const execPct = toFiniteNumber(da.executor_pct, 0) || (100 - driverPct);
+    const filledDriver = Math.round(driverPct / 5);
+    const filledExec = 20 - filledDriver;
+    const driverBar = '█'.repeat(Math.max(0, filledDriver)) + '░'.repeat(Math.max(0, filledExec));
+    const driverCls = driverPct > 40 ? 'kv-crit' : driverPct > 20 ? 'kv-warn' : 'kv-ok';
+    const intervals = Array.isArray(da.driver_intervals) ? da.driver_intervals : [];
+    const intervalRows = intervals.slice(0, 8).map(iv => {
+      const labelMap = { pre_first_stage: localeText('Before 1st Stage', 'Antes do 1º Stage'), inter_stage_gap: localeText('Gap between Stages', 'Gap entre Stages'), post_last_stage: localeText('After Last Stage', 'Após último Stage') };
+      return `<tr><td>${esc(labelMap[iv.label] || iv.label)}</td><td>${fmtMs(iv.duration_ms)}</td></tr>`;
+    }).join('');
+
+    const clusterTabIdx = tabs.findIndex(t => t.key === 'cluster');
+    const driverSection = `
+      <div class="st-section-title" style="margin-top:${clusterTabIdx >= 0 ? '1.5rem' : '0'};">${localeText('Driver vs Executor Time', 'Driver vs Executor Time')}</div>
+      <div class="st-kpi-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:1rem;">
+        <div class="st-kpi-cell">
+          <div class="st-kpi-label">${localeText('Driver Serial Time', 'Tempo Serial do Driver')}</div>
+          <div class="st-kpi-value ${driverCls}">${driverPct.toFixed(1)}%</div>
+          <div class="st-kpi-sub">${localeText('Time outside parallel execution. High = scalability limit (Amdahl\'s Law).', 'Tempo fora de execução paralela. Alto = limite de escalabilidade (Lei de Amdahl).')}</div>
+        </div>
+        <div class="st-kpi-cell">
+          <div class="st-kpi-label">${localeText('Executor Parallel Time', 'Tempo Paralelo dos Executors')}</div>
+          <div class="st-kpi-value kv-ok">${execPct.toFixed(1)}%</div>
+          <div class="st-kpi-sub">${localeText('Time effectively parallel across executors.', 'Tempo efetivamente paralelo nos executores.')}</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.78rem;color:var(--text-dim);margin-bottom:0.75rem;letter-spacing:0.04em;">${driverBar} ${driverPct.toFixed(0)}% driver / ${execPct.toFixed(0)}% executor</div>
+      ${intervals.length > 0 ? `
+        <div class="table-wrap" style="margin-bottom:0;overflow-x:auto;">
+          <table><thead><tr><th>${localeText('Interval', 'Intervalo')}</th><th>${localeText('Duration', 'Duração')}</th></tr></thead>
+          <tbody>${intervalRows}${intervals.length > 8 ? `<tr><td colspan="2" style="color:var(--text-mute);font-style:italic;">${localeText(`+${intervals.length - 8} more gaps…`, `+${intervals.length - 8} gaps adicionais…`)}</td></tr>` : ''}</tbody>
+          </table>
+        </div>
+      ` : ''}
+    `;
+
+    const envObj = sparklensContext.environment || {};
+    const envKeys = Object.keys(envObj);
+    const envSection = envKeys.length > 0 ? `
+      <div class="st-section-title" style="margin-top:1.5rem;">${localeText('Spark Configuration (environment)', 'Configuração Spark (environment)')}</div>
+      <div class="table-wrap" style="margin-bottom:0;overflow-x:auto;">
+        <table><thead><tr><th>${localeText('Property', 'Propriedade')}</th><th>${localeText('Configured Value', 'Valor configurado')}</th></tr></thead>
+        <tbody>${envKeys.map(k => `<tr><td style="font-family:var(--mono);font-size:0.72rem;">${esc(k)}</td><td style="font-family:var(--mono);font-size:0.72rem;">${esc(String(envObj[k]))}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    ` : '';
+
+    if (clusterTabIdx >= 0) {
+      tabs[clusterTabIdx] = { key: 'cluster', label: localeText('Cluster', 'Cluster'), content: tabs[clusterTabIdx].content + driverSection + envSection };
+    } else {
+      tabs.push({ key: 'cluster', label: localeText('Cluster', 'Cluster'), content: driverSection + envSection });
+    }
+  }
+
+  // Score moves to header collapsible — no standalone tab
+
+  // Tab "Escalabilidade" (renamed from ArithmeticEngine — only when LLM + Sparklens, deduplicated)
+  if (hasSparklens && hasLlm) {
+    const arithmeticName = getArithmeticEngineName();
+    const sims = Array.isArray(sparklensContext.scalability_simulation) ? sparklensContext.scalability_simulation : [];
+    const hostEntries = Object.entries(sparklensContext.host_analysis || {})
+      .map(([host, data]) => ({ host, data }))
+      .sort((a, b) => (toFiniteNumber(b.data && b.data.total_run_ms, 0) || 0) - (toFiniteNumber(a.data && a.data.total_run_ms, 0) || 0));
+    const totalHostRunMs = hostEntries.reduce((sum, item) => sum + (toFiniteNumber(item.data && item.data.total_run_ms, 0) || 0), 0);
+
+    const scenarioMap = new Map();
+    sims.forEach(sc => { const ec = toFiniteNumber(sc && sc.executor_count, null); if (ec == null) return; const prev = scenarioMap.get(ec); if (!prev || toFiniteNumber(sc.estimated_ms, Infinity) < toFiniteNumber(prev.estimated_ms, Infinity)) scenarioMap.set(ec, sc); });
+    const uniqueScenarios = Array.from(scenarioMap.values()).sort((a, b) => (a.executor_count || 0) - (b.executor_count || 0));
+    const baselineSc = uniqueScenarios.find(sc => toFiniteNumber(sc.pct_of_current, 0) === 100) || uniqueScenarios[0] || null;
+    const scenarioRows = uniqueScenarios.slice(0, 6).map(sc => {
+      const d = baselineSc && toFiniteNumber(baselineSc.estimated_ms, 0) > 0
+        ? (((toFiniteNumber(baselineSc.estimated_ms, 0) || 0) - (toFiniteNumber(sc.estimated_ms, 0) || 0)) * 100) / (toFiniteNumber(baselineSc.estimated_ms, 0) || 1)
+        : 0;
+      return `<tr><td>${toFiniteNumber(sc.executor_count, '—')}</td><td>${fmtMinutes(sc.estimated_min)}</td><td>${sc === baselineSc ? localeText('baseline', 'base') : fmtPct(d)}</td><td>${fmtPct(sc.cluster_utilization_pct)}</td></tr>`;
+    }).join('');
+
+    const hostCards = hostEntries.length
+      ? hostEntries.slice(0, 3).map(({ host, data }) => {
+          const runMs = toFiniteNumber(data && data.total_run_ms, 0) || 0;
+          const sharePct = totalHostRunMs > 0 ? (runMs * 100) / totalHostRunMs : 0;
+          return `
+            <div class="kv-item">
+              <div class="k">${esc(host)}</div>
+              <div style="margin-bottom:6px;">
+                ${metricChip(`${fmtPct(sharePct)} ${localeText('runtime share', 'do tempo')}`, 'host_runtime_share', sparkChipClass(sharePct, 45, 60))}
+                ${metricChip(`${fmtPct(data.gc_pct)} GC`, 'host_gc_share', sparkChipClass(toFiniteNumber(data && data.gc_pct, 0) || 0, 8, 15))}
+              </div>
+              <div>${localeText('Tasks', 'Tarefas')}: ${esc((toFiniteNumber(data && data.task_count, 0) || 0).toLocaleString())}</div>
+              <div>Runtime: ${fmtMs(runMs)}</div>
+            </div>
+          `;
+        }).join('')
+      : `<div class="spark-empty">${localeText('No host-level metrics available.', 'Nenhuma métrica por host disponível.')}</div>`;
+
+    tabs.push({
+      key: 'scalability',
+      label: localeText('Scalability', 'Escalabilidade'),
+      content: `
+        <div class="st-section-title">${localeText('Scalability Simulation', 'Simulação de Escalabilidade')}</div>
+        <div class="table-wrap" style="margin-bottom:1.5rem;">
+          <table>
+            <thead><tr>
+              <th>${localeText('Executors', 'Executores')}</th>
+              <th>${metricHelp(localeText('Runtime', 'Runtime'), 'scalability_runtime')}</th>
+              <th>${metricHelp('Delta', 'scalability_delta')}</th>
+              <th>${metricHelp(localeText('Utilization', 'Utilização'), 'scalability_utilization')}</th>
+            </tr></thead>
+            <tbody>${scenarioRows || `<tr><td colspan="4">${localeText('No simulation data.', 'Dados de simulação indisponíveis.')}</td></tr>`}</tbody>
+          </table>
+        </div>
+        <div class="st-section-title">${localeText('Host Hotspots', 'Hotspots por Host')}</div>
+        <div class="kv-grid">${hostCards}</div>
+      `
+    });
+  }
+
+  // Tab "Plano de Ação" (LLM)
+  if (hasLlm && (llmClusterConfigs.length > 0 || llmCodeFixes.length > 0)) {
+    const cfgCards = llmClusterConfigs.map((cfg, idx) => `
+      <div class="action-plan-card">
+        <div class="ap-header"><span class="ap-num">${idx + 1}</span><div>
+          <div class="ap-title">${esc(cfg.name || localeText('Cluster Config', 'Config de Cluster'))}</div>
+          <div class="ap-location">${esc(cfg.bottleneck_id || '')} · ${esc(cfg.estimated_impact || '')}</div>
+        </div></div>
+        <div class="ap-body"><div>${esc(cfg.rationale || '')}</div>${cfg.code ? `<pre class="code-block-story" style="margin-top:10px;">${esc(cfg.code)}</pre>` : ''}</div>
+      </div>
+    `).join('');
+    const fixCards = llmCodeFixes.map((fix, idx) => `
+      <div class="action-plan-card">
+        <div class="ap-header"><span class="ap-num">${idx + 1}</span><div>
+          <div class="ap-title">${esc(fix.title || localeText('Code Fix', 'Correção de Código'))}</div>
+          <div class="ap-location">${esc(fix.bottleneck_id || '')} · L${fix.line_start ?? '?'}–${fix.line_end ?? '?'} ${esc(fix.function_name || '')}</div>
+        </div></div>
+        <div class="ap-body">
+          <div>${esc(fix.problem_explanation || '')}</div>
+          ${(fix.before_code || fix.after_code) ? `
+            <div class="code-diff-grid" style="margin-top:12px;">
+              <div class="code-panel-story"><div class="code-panel-label before">Before</div><pre class="code-block-story">${esc(fix.before_code || '')}</pre></div>
+              <div class="code-panel-story"><div class="code-panel-label after">After</div><pre class="code-block-story">${esc(fix.after_code || '')}</pre></div>
+            </div>
+          ` : ''}
+          <div style="margin-top:8px;font-size:0.78rem;color:var(--green);">${localeText('Expected gain:', 'Ganho esperado:')} ${esc(fix.expected_gain || '—')}</div>
+        </div>
+      </div>
+    `).join('');
+    tabs.push({
+      key: 'action', label: localeText('Action Plan', 'Plano de Ação'),
+      content: `
+        ${llmClusterConfigs.length > 0 ? `<div class="st-section-title">${localeText('Cluster Configurations', 'Configurações de Cluster')}</div>${cfgCards}` : ''}
+        ${llmCodeFixes.length > 0 ? `<div class="st-section-title">${localeText('Code Fixes', 'Correções de Código')}</div>${fixCards}` : ''}
+      `
+    });
+  }
+
+  if (tabs.length === 0) {
+    tabs.push({ key: 'summary', label: localeText('Summary', 'Resumo'), content: `<div class="spark-empty">${localeText('No detail sections available.', 'Nenhuma seção de detalhes disponível.')}</div>` });
+  }
+
+  const navHtml = tabs.map((t, i) =>
+    `<button class="res-tab-btn${i === 0 ? ' active' : ''}" data-resgroup="${tabId}" data-restab="${t.key}">${t.label}</button>`
+  ).join('');
+  const panesHtml = tabs.map((t, i) =>
+    `<div class="res-tab-pane${i === 0 ? ' active' : ''}" data-resgroup="${tabId}" data-respane="${t.key}" style="padding:1.25rem 0 0;">${t.content}</div>`
+  ).join('');
+
+  return `
+    <div class="llm-storytelling">
+      ${diagHeaderHtml}
+      ${(overall || sparklensScoreDetails || llmScoreDetails) ? `
+        <details class="score-breakdown-details">
+          <summary>▶ ${localeText('View score breakdown', 'Ver detalhamento do score')}</summary>
+          <div class="score-breakdown-body">${renderScoreSummary(sparklensScoreDetails, llmScoreDetails)}</div>
+        </details>
+      ` : ''}
+      ${fixBannerHtml}
+      ${kpiGridHtml}
+      <nav class="res-tabs-nav">${navHtml}</nav>
+      ${panesHtml}
+    </div>
+  `;
+}
+
 function renderResults(data, options = {}) {
   const { skipHistory = false } = options;
   currentRenderedData = data;
@@ -2970,195 +4493,47 @@ function renderResults(data, options = {}) {
   const llmScoreDetails = getLlmScoreDetails(data.llm_analysis || '');
   const hasScoreSummary = Boolean(sparklensScoreDetails || (llmScoreDetails && llmScoreDetails.score != null));
   const hasSparklens = Boolean(sparklensContext && typeof sparklensContext === 'object');
-  const legacySummary = document.getElementById('legacy-summary-section');
-  const legacyStages = document.getElementById('legacy-stages-section');
-  const scoreSummarySection = document.getElementById('score-summary-section');
-  const scoreSummaryLabel = document.getElementById('results-score-label');
-  const sparklensSection = document.getElementById('sparklens-section');
-  const sparklensLabel = document.getElementById('results-sparklens-label');
-  const llmLabel = document.getElementById('results-llm-label');
-  const planLabel = document.getElementById('results-plan-label');
+
+  // ── Always show unified diagnostic panel first ─────────────────────
+  const unifiedSection = document.getElementById('unified-diagnostic-section');
+  const unifiedHtml = renderUnifiedDiagnostic(data, sparklensContext, sparklensScoreDetails, llmScoreDetails);
+  if (unifiedSection) {
+    unifiedSection.innerHTML = unifiedHtml;
+    unifiedSection.style.display = '';
+  }
+
+  // ── Hide all legacy sections (content lives in unified tabs now) ───
+  ['legacy-summary-section','efficiency-section','executor-section',
+   'legacy-stages-section','score-summary-section','sparklens-section','llm-section'
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+
+  // Update export label numbering
   const exportLabel = document.getElementById('results-export-label');
+  const planLabel   = document.getElementById('results-plan-label');
+  if (exportLabel) exportLabel.textContent = sectionLabel('02', 'Export', 'Exportar');
+  if (planLabel)   planLabel.textContent   = sectionLabel('01', 'SQL Physical Plan', 'Plano Fisico SQL');
 
-  // AI-first layout: when LLM output exists, keep the experience focused in AI Analysis.
-  if (hasLlm) {
-    if (legacySummary) legacySummary.style.display = 'none';
-    if (legacyStages) legacyStages.style.display = 'none';
-    if (scoreSummaryLabel) scoreSummaryLabel.textContent = sectionLabel('02', 'Overall Score', 'Score Geral');
-    if (sparklensLabel) sparklensLabel.textContent = `03 - ${arithmeticName}`;
-    if (llmLabel) llmLabel.textContent = hasSparklens ? sectionLabel('04', 'AI Component', 'Componente de IA') : sectionLabel('03', 'AI Component', 'Componente de IA');
-    if (planLabel) planLabel.textContent = hasSparklens ? sectionLabel('05', 'SQL Physical Plan', 'Plano Fisico SQL') : sectionLabel('04', 'SQL Physical Plan', 'Plano Fisico SQL');
-    if (exportLabel) exportLabel.textContent = hasSparklens ? sectionLabel('06', 'Export', 'Exportar') : sectionLabel('05', 'Export', 'Exportar');
-  } else {
-    if (legacySummary) legacySummary.style.display = '';
-    if (legacyStages) legacyStages.style.display = '';
-    if (scoreSummaryLabel) scoreSummaryLabel.textContent = sectionLabel('04', 'Overall Score', 'Score Geral');
-    if (sparklensLabel) sparklensLabel.textContent = `05 - ${arithmeticName}`;
-    if (llmLabel) llmLabel.textContent = sectionLabel('06', 'AI Component', 'Componente de IA');
-    if (planLabel) planLabel.textContent = hasSparklens ? sectionLabel('06', 'SQL Physical Plan', 'Plano Fisico SQL') : sectionLabel('04', 'SQL Physical Plan', 'Plano Fisico SQL');
-    if (exportLabel) exportLabel.textContent = hasSparklens ? sectionLabel('07', 'Export', 'Exportar') : sectionLabel('05', 'Export', 'Exportar');
-  }
-
-  // KPI cards
+  // Keep originalStages updated for sort functionality (kept for export)
   const s = data.summary;
-  if (s) {
-    const cards = [
-      { label: localeText('App', 'Aplicacao'), value: s.app_name, cls: 'accent' },
-      { label: localeText('Duration', 'Duracao'), value: fmtMs(s.total_duration_ms), cls: '' },
-      { label: localeText('Stages', 'Etapas'), value: s.num_stages, cls: '' },
-      { label: localeText('Tasks', 'Tarefas'), value: s.num_tasks.toLocaleString(), cls: '' },
-      { label: localeText('Executors', 'Executores'), value: s.executor_count, cls: 'green' },
-      { label: localeText('Input', 'Entrada'), value: fmtBytes(s.total_input_bytes), cls: '' },
-      { label: localeText('Shuffle Read', 'Leitura de Shuffle'), value: fmtBytes(s.total_shuffle_read_bytes), cls: s.total_shuffle_read_bytes > 1e9 ? 'yellow' : '' },
-      { label: 'Spark', value: s.spark_version, cls: '' },
-    ];
-    const container = document.getElementById('kpi-cards');
-    container.innerHTML = cards.map(c => `
-      <div class="kpi-card">
-        <div class="kpi-label">${c.label}</div>
-        <div class="kpi-value ${c.cls}">${c.value}</div>
-      </div>
-    `).join('');
-
-    // Stage table
-    if (s.stages && s.stages.length) {
-      originalStages = [...s.stages]; // Store original data
-      renderStageTable(s.stages);
-      
-      // Add sort listeners
-      document.querySelectorAll('#stage-table th[data-sort]').forEach(th => {
-        th.style.cursor = 'pointer';
-        th.addEventListener('click', () => sortTable(th.dataset.sort));
-      });
-    }
-
-    // Job-Level Efficiency
-    const jem = s.job_efficiency_meta || {};
-    const effSection = document.getElementById('efficiency-section');
-    if (effSection && (jem.cpu_efficiency != null || jem.gc_overhead_pct != null)) {
-      effSection.style.display = '';
-      const cpuEff = jem.cpu_efficiency ?? 0;
-      const gcPct  = jem.gc_overhead_pct ?? 0;
-      const desrPct = jem.deserialize_overhead_pct ?? 0;
-      const cpuCls = cpuEff >= 0.5 ? 'good' : cpuEff >= 0.2 ? 'warn' : 'bad';
-      const gcCls  = gcPct < 2 ? 'good' : gcPct < 5 ? 'warn' : 'bad';
-      document.getElementById('efficiency-kpis').innerHTML = [
-        {
-          label: localeText('CPU Efficiency', 'Eficiencia de CPU'),
-          value: cpuEff.toFixed(3),
-          cls: cpuCls,
-          hint: localeText('CPU time / wall-clock. <0.2 = I/O-bound.', 'Tempo de CPU / tempo total. <0.2 costuma indicar gargalo fora de CPU.'),
-        },
-        {
-          label: localeText('GC Overhead', 'Overhead de GC'),
-          value: gcPct.toFixed(2) + '%',
-          cls: gcCls,
-          hint: localeText('JVM GC time as % of run time. >5% is concerning.', 'Tempo de JVM GC como % do tempo total. >5% merece atencao.'),
-        },
-        {
-          label: localeText('Deserialize Overhead', 'Overhead de desserializacao'),
-          value: desrPct.toFixed(2) + '%',
-          cls: '',
-          hint: localeText('% of run time spent deserializing task inputs.', '% do tempo total gasto desserializando entradas das tarefas.'),
-        },
-      ].map(k => `
-        <div class="eff-card">
-          <div class="eff-label">${k.label}</div>
-          <div class="eff-value ${k.cls}">${k.value}</div>
-          <div class="eff-hint">${k.hint}</div>
-        </div>
-      `).join('');
-    } else if (effSection) {
-      effSection.style.display = 'none';
-    }
-
-    // Executor-Level Metrics
-    const execSummary = s.executor_summary || [];
-    const execSection = document.getElementById('executor-section');
-    if (execSection && execSummary.length > 0) {
-      execSection.style.display = '';
-      document.getElementById('executor-tbody').innerHTML = execSummary.map(ex => {
-        const gcCls   = ex.gc_pct > 5 ? 'style="color:var(--red)"' : '';
-        const cpuCls  = ex.cpu_efficiency < 0.05 ? 'style="color:var(--yellow)"' : '';
-        return `<tr>
-          <td>${esc(ex.executor_id)}</td>
-          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${esc(ex.host)}">${esc(ex.host)}</td>
-          <td>${ex.cores}</td>
-          <td>${ex.tasks.toLocaleString()}</td>
-          <td>${ex.gc_ms.toLocaleString()}</td>
-          <td ${gcCls}>${ex.gc_pct.toFixed(2)}%</td>
-          <td ${cpuCls}>${ex.cpu_efficiency.toFixed(3)}</td>
-        </tr>`;
-      }).join('');
-    } else if (execSection) {
-      execSection.style.display = 'none';
-    }
+  if (s && s.stages && s.stages.length) {
+    originalStages = [...s.stages];
   }
 
-  if (hasScoreSummary) {
-    if (scoreSummarySection) scoreSummarySection.style.display = '';
-    const scoreSummaryInner = document.getElementById('score-summary-inner');
-    if (scoreSummaryInner) scoreSummaryInner.innerHTML = renderScoreSummary(sparklensScoreDetails, llmScoreDetails);
-  } else if (scoreSummarySection) {
-    scoreSummarySection.style.display = 'none';
-    const scoreSummaryInner = document.getElementById('score-summary-inner');
-    if (scoreSummaryInner) scoreSummaryInner.innerHTML = '';
-  }
-
-  if (hasSparklens) {
-    if (sparklensSection) sparklensSection.style.display = '';
-    const sparklensInner = document.getElementById('sparklens-inner');
-    if (sparklensInner) sparklensInner.innerHTML = renderSparklensInsights(sparklensContext, sparklensScoreDetails);
-  } else if (sparklensSection) {
-    sparklensSection.style.display = 'none';
-    const sparklensInner = document.getElementById('sparklens-inner');
-    if (sparklensInner) sparklensInner.innerHTML = '';
-  }
-
-  // LLM analysis
-  if (hasLlm) {
-
-    document.getElementById('llm-section').style.display = '';
-    const llmInner = document.getElementById('llm-inner');
-    llmInner.innerHTML = convertMermaidBlocks(renderLlmAnalysis(data.llm_analysis, llmScoreDetails));
-
-    // SQL Physical Plan removed from the LLM card — it is now shown in the dedicated canvas section below.
-
-    renderMermaidIn(llmInner).catch(() => {
-      // Ignore Mermaid rendering failures and keep textual fallback visible.
-    });
-  } else {
-    document.getElementById('llm-section').style.display = 'none';
-    document.getElementById('llm-inner').innerHTML = '';
-  }
-
-  // Build markdown content entirely on the client - no server round-trip
-  const mdParts = [];
-  if (hasScoreSummary) {
-    mdParts.push(buildOverallScoreMarkdown(sparklensScoreDetails, llmScoreDetails));
-  }
-  if (hasSparklens) {
-    mdParts.push(buildSparklensMarkdown(sparklensContext, sparklensScoreDetails));
-  }
-  if (hasLlm) {
-    mdParts.push(`## ${localeText('AI Analysis', 'Analise de IA')}\n\n` + data.llm_analysis);
-  } else if (currentReducedReport) {
-    mdParts.push(currentReducedReport);
-  }
-  const mdContent = mdParts.join('');
+  // Build standalone HTML export — captures the exact rendered diagnostic view
+  const htmlContent = buildExportHtml(unifiedHtml, s ? s.app_name : '');
   const safeName = (s && s.app_name ? s.app_name.replace(/[^a-z0-9_-]/gi, '_') : 'report');
-  const suggestedFilename = `spark_${safeName}_${Date.now()}.md`;
+  const suggestedFilename = `spark_${safeName}_${Date.now()}.html`;
 
   // Download button — purely local, no server fetch
   const dlBar = document.getElementById('dl-bar');
   dlBar.innerHTML = `
-    <button class="btn-dl" type="button" id="btn-dl-md">
+    <button class="btn-dl" type="button" id="btn-dl-html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      ${localeText('Download Markdown', 'Baixar Markdown')}
+      ${localeText('Export HTML', 'Exportar HTML')}
     </button>
   `;
-  document.getElementById('btn-dl-md').addEventListener('click', () =>
-    downloadMarkdownLocal(mdContent, suggestedFilename)
+  document.getElementById('btn-dl-html').addEventListener('click', () =>
+    downloadHtmlLocal(htmlContent, suggestedFilename)
   );
 
   // SQL Physical Plan canvas viewer (uses locally-stored summary — never re-fetched)
@@ -3185,7 +4560,7 @@ function renderResults(data, options = {}) {
     duration:       s ? fmtMs(s.total_duration_ms)  : '—',
     numStages:      s ? s.num_stages               : 0,
     numTasks:       s ? s.num_tasks                : 0,
-    markdownContent: mdContent,
+    htmlContent,
     suggestedFilename,
   };
   if (!skipHistory) {
@@ -3989,69 +5364,38 @@ function renderScoreSummary(sparklensDetails, llmDetails) {
     return `<div class="spark-empty">${localeText('No score summary available.', 'Nenhum resumo de score disponivel.')}</div>`;
   }
 
-  const sparkWeight = sparklensDetails && llmDetails && llmDetails.score != null ? localeText('Weight 60%', 'Peso 60%') : localeText('Weight 100%', 'Peso 100%');
-  const llmWeight = sparklensDetails && llmDetails && llmDetails.score != null ? localeText('Weight 40%', 'Peso 40%') : localeText('Weight 100%', 'Peso 100%');
-  const criticalLabel = localeText('Critical', 'Critico');
-  const highLabel = localeText('High', 'Alto');
-  const mediumLabel = localeText('Medium', 'Medio');
+  const score = overall.score;
+  const circ = 251.2;
+  const dash = ((score / 100) * circ).toFixed(1);
+  const ringColor = score >= 70 ? 'var(--green)' : score >= 40 ? 'var(--yellow)' : 'var(--red)';
 
-  const cards = [];
+  const sparkWeight = sparklensDetails && llmDetails && llmDetails.score != null ? '60%' : '100%';
+  const llmWeight   = sparklensDetails && llmDetails && llmDetails.score != null ? '40%' : '100%';
+
+  const componentRows = [];
   if (sparklensDetails) {
-    cards.push(`
-      <article class="score-box">
-        <div class="score-box-title">${metricHelp(arithmeticName, 'arithmetic_component')}</div>
-        ${metricValueBubble(`<div class="score-box-value ${sparklensDetails.scoreCls}">${sparklensDetails.score}</div>`, getArithmeticScorePopup(sparklensDetails))}
-        <div class="score-box-desc">${esc(sparklensDetails.explanation)}</div>
-        <div>
-          ${metricChip(sparkWeight, 'arithmetic_component', sparklensDetails.scoreCls)}
-          ${sparklensDetails.factors.map((factor) => metricChip(`${factor.label} ${factor.value}`, factor.tipKey || 'arithmetic_component', factor.cls || '')).join('')}
-        </div>
-      </article>
+    componentRows.push(`
+      <div class="st-kpi-cell">
+        <div class="st-kpi-label">${arithmeticName} · ${localeText('weight', 'peso')} ${sparkWeight}</div>
+        <div class="st-kpi-value ${sparklensDetails.scoreCls === 'good' ? 'kv-ok' : sparklensDetails.scoreCls === 'warn' ? 'kv-warn' : 'kv-crit'}">${sparklensDetails.score}</div>
+        <div class="st-kpi-sub">${esc(sparklensDetails.explanation)}</div>
+      </div>
     `);
   }
   if (llmDetails && llmDetails.score != null) {
-    cards.push(`
-      <article class="score-box">
-        <div class="score-box-title">${metricHelp(localeText('AI Component', 'Componente de IA'), 'ai_component')}</div>
-        ${metricValueBubble(`<div class="score-box-value ${llmDetails.scoreCls}">${llmDetails.score}</div>`, getLlmScorePopup(llmDetails))}
-        <div class="score-box-desc">${esc(llmDetails.explanation)}</div>
-        <div>
-          ${metricChip(llmWeight, 'ai_component', llmDetails.scoreCls)}
-          ${metricChip(`${criticalLabel} ${llmDetails.counts.critical}`, 'ai_component', llmDetails.counts.critical > 0 ? 'bad' : 'good')}
-          ${metricChip(`${highLabel} ${llmDetails.counts.high}`, 'ai_component', llmDetails.counts.high > 0 ? 'warn' : 'good')}
-          ${metricChip(`${mediumLabel} ${llmDetails.counts.medium}`, 'ai_component', '')}
-        </div>
-      </article>
+    componentRows.push(`
+      <div class="st-kpi-cell">
+        <div class="st-kpi-label">${localeText('AI Component', 'Componente IA')} · ${localeText('weight', 'peso')} ${llmWeight}</div>
+        <div class="st-kpi-value ${llmDetails.scoreCls === 'good' ? 'kv-ok' : llmDetails.scoreCls === 'warn' ? 'kv-warn' : 'kv-crit'}">${llmDetails.score}</div>
+        <div class="st-kpi-sub">${esc(llmDetails.explanation)}</div>
+      </div>
     `);
   }
 
   return `
-    <div class="llm-json-grid">
-      <section class="llm-card">
-        <div class="llm-card-title">${metricHelp(localeText('Overall Score', 'Score Geral'), 'overall_score')}</div>
-        <div class="health-wrap">
-          ${metricValueBubble(`<div class="health-score ${overall.scoreCls}">${overall.score}</div>`, getOverallScorePopup(overall, sparklensDetails, llmDetails))}
-          <div style="flex:1; min-width:240px;">
-            <div><strong>${esc(overall.headline)}</strong></div>
-            <div class="gain-badge">${esc(overall.formula)}</div>
-            <div class="spark-note">${esc(overall.interpretation)}</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Component Breakdown', 'Quebra por Componente')}</div>
-        <div class="score-grid">${cards.join('')}</div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('How To Read It', 'Como Ler')}</div>
-        <div class="kv-grid">
-          <div class="kv-item"><div class="k">${metricHelp(localeText('Overall score', 'Score geral'), 'overall_score')}</div><div>${localeText('Quick health metric for the run. Lower score means higher optimization priority.', 'Metrica rapida de saude da execucao. Quanto menor o score, maior a prioridade de otimizacao.')}</div></div>
-          <div class="kv-item"><div class="k">${metricHelp(localeText(`${arithmeticName} component`, `Componente ${arithmeticName}`), 'arithmetic_component')}</div><div>${esc(sparklensDetails ? sparklensDetails.formula : localeText('Unavailable for this run.', 'Indisponivel para esta execucao.'))}</div></div>
-          <div class="kv-item"><div class="k">${metricHelp(localeText('AI component', 'Componente de IA'), 'ai_component')}</div><div>${esc(llmDetails && llmDetails.score != null ? llmDetails.formula : localeText('Unavailable for this run.', 'Indisponivel para esta execucao.'))}</div></div>
-        </div>
-      </section>
+    <div style="font-family:var(--mono); font-size:0.72rem; color:var(--text-mute); margin-bottom:1rem; line-height:1.6;">${esc(overall.formula)}</div>
+    <div class="st-kpi-grid" style="grid-template-columns:repeat(${componentRows.length},1fr);">
+      ${componentRows.join('')}
     </div>
   `;
 }
@@ -4101,8 +5445,8 @@ function renderSparklensInsights(context, sparklensDetails = null) {
   const totalHostRunMs = hostEntries.reduce((sum, item) => sum + (toFiniteNumber(item.data && item.data.total_run_ms, 0) || 0), 0);
 
   const coreKpis = [
-    [localeText('Cluster Utilization', 'Utilizacao do Cluster'), fmtPct(cluster.cluster_utilization_pct), sparkChipClass(100 - (toFiniteNumber(cluster.cluster_utilization_pct, 100) ?? 100), 25, 45), 'cluster_utilization'],
-    [localeText('Driver Idle', 'Ociosidade do Driver'), fmtPct(app.driver_idle_pct), sparkChipClass(toFiniteNumber(app.driver_idle_pct, 0) || 0, 18, 35), 'driver_idle'],
+    [localeText('Core Utilization', 'Utilização de Cores'), fmtPct(cluster.cluster_utilization_pct), sparkChipClass(100 - (toFiniteNumber(cluster.cluster_utilization_pct, 100) ?? 100), 25, 45), 'cluster_utilization'],
+    [localeText('Driver Serial Time', 'Tempo Serial do Driver'), fmtPct(app.driver_idle_pct), sparkChipClass(toFiniteNumber(app.driver_idle_pct, 0) || 0, 18, 35), 'driver_idle'],
     [localeText('Peak Executors', 'Pico de Executores'), toFiniteNumber(cluster.executor_count, 0) || naLabel(), '', 'peak_executors'],
     [localeText('Total Cores', 'Total de Cores'), toFiniteNumber(cluster.total_cores, 0) || naLabel(), '', 'total_cores'],
     [localeText('Stages Summarized', 'Etapas Resumidas'), stages.length || 0, '', 'stages_summarized'],
@@ -4199,34 +5543,39 @@ function renderSparklensInsights(context, sparklensDetails = null) {
     : `<div class="spark-empty">${localeText('No host-level metrics available.', 'Nenhuma metrica por host disponivel.')}</div>`;
 
   return `
+    <div class="diagnosis-header" style="margin-bottom:1.5rem;">
+      <div>
+        <div class="diagnosis-eyebrow">${arithmeticName}</div>
+        <h2 class="diagnosis-title">${esc(details.headline)}</h2>
+        <div class="diagnosis-sub">${esc(details.formula)} · ${localeText('Cluster', 'Cluster')} ${fmtPct(cluster.cluster_utilization_pct)} · ${localeText('Driver idle', 'Driver ocioso')} ${fmtPct(app.driver_idle_pct)}</div>
+      </div>
+      <div class="score-ring-wrap">
+        <svg class="score-ring-svg" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="40" fill="none" stroke="var(--border2)" stroke-width="7"/>
+          <circle cx="45" cy="45" r="40" fill="none"
+            stroke="${healthCls === 'good' ? 'var(--green)' : healthCls === 'warn' ? 'var(--yellow)' : 'var(--red)'}"
+            stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="${((healthScore / 100) * 251.2).toFixed(1)} 251.2"
+            stroke-dashoffset="62.8"
+            transform="rotate(-90 45 45)"/>
+        </svg>
+        <div class="score-ring-inner">
+          <span class="score-ring-num" style="color:${healthCls === 'good' ? 'var(--green)' : healthCls === 'warn' ? 'var(--yellow)' : 'var(--red)'}">${healthScore}</span>
+          <span class="score-ring-lbl">/100</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="st-kpi-grid" style="margin-bottom:1.5rem;">
+      ${coreKpis.map(([label, value, cls]) => `
+        <div class="st-kpi-cell">
+          <div class="st-kpi-label">${label}</div>
+          <div class="st-kpi-value${cls ? ' ' + (cls === 'bad' ? 'kv-crit' : cls === 'warn' ? 'kv-warn' : 'kv-ok') : ''}">${esc(String(value))}</div>
+        </div>
+      `).join('')}
+    </div>
+
     <div class="llm-json-grid">
-      <section class="llm-card">
-        <div class="llm-card-title">${metricHelp(`${arithmeticName} Score`, 'arithmetic_component')}</div>
-        <div class="health-wrap">
-          ${metricValueBubble(`<div class="health-score ${healthCls}">${healthScore}</div>`, getArithmeticScorePopup(details))}
-          <div style="flex:1; min-width:220px;">
-            <div><strong>${esc(details.headline)}</strong></div>
-            <div class="gain-badge">${localeText('Component score in overall metric', 'Score do componente na metrica geral')}</div>
-            <div class="spark-note">
-              ${esc(details.formula)} ${localeText('Cluster utilization', 'Utilizacao do cluster')} ${fmtPct(cluster.cluster_utilization_pct)} | ${localeText('Driver idle', 'Ociosidade do driver')} ${fmtPct(app.driver_idle_pct)} | ${stages.length} ${localeText('stages summarized', 'etapas resumidas')}.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Core Signals', 'Sinais Principais')}</div>
-        <div class="llm-kpis">
-          ${coreKpis.map(([label, value, cls, tipKey]) => `
-            <div class="llm-kpi">
-              <div class="k">${metricHelp(label, tipKey || 'arithmetic_component')}</div>
-              <div class="v">${metricValueBubble(`<span>${esc(value)}</span>`, tipKey || 'arithmetic_component')}</div>
-              ${cls ? `<div class="spark-note">${metricChip(localizedChipLabel(cls), tipKey || 'arithmetic_component', cls)}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </section>
-
       <section class="llm-card">
         <div class="llm-card-title">${localeText('Mathematical Insights', 'Insights Matematicos')}</div>
         <div class="bottleneck-list">${insightCards}</div>
@@ -4243,10 +5592,10 @@ function renderSparklensInsights(context, sparklensDetails = null) {
           <table>
             <thead>
               <tr>
-                <th>${metricHelp(localeText('Executors', 'Executores'), 'peak_executors')}</th>
-                <th>${metricHelp(localeText('Estimated Runtime', 'Runtime Estimado'), 'scalability_runtime')}</th>
-                <th>${metricHelp(localeText('Delta vs Baseline', 'Delta vs Base'), 'scalability_delta')}</th>
-                <th>${metricHelp(localeText('Cluster Utilization', 'Utilizacao do Cluster'), 'scalability_utilization')}</th>
+                <th>${localeText('Executors', 'Executores')}</th>
+                <th>${localeText('Estimated Runtime', 'Runtime Estimado')}</th>
+                <th>${localeText('Delta vs Baseline', 'Delta vs Base')}</th>
+                <th>${localeText('Cluster Utilization', 'Utilizacao do Cluster')}</th>
               </tr>
             </thead>
             <tbody>
@@ -4348,182 +5697,307 @@ function renderLlmAnalysis(rawText, llmDetails = null) {
   const clusterConfigs = Array.isArray(actionPlan.cluster_configs) ? actionPlan.cluster_configs : [];
   const codeFixes = Array.isArray(actionPlan.code_fixes) ? actionPlan.code_fixes : [];
 
-  const coreKpis = [
-    [localeText('Duration Total (min)', 'Duracao Total (min)'), kpis.duration_total_min],
-    [localeText('Input Volume (GB)', 'Volume de Entrada (GB)'), kpis.input_volume_gb],
-    [localeText('Total Tasks', 'Total de Tarefas'), kpis.total_tasks],
-    [localeText('Avg Data/Task (KB)', 'Media de Dados/Task (KB)'), kpis.avg_data_per_task_kb],
-    [localeText('Stages with Skew', 'Etapas com Skew'), kpis.stages_with_skew],
-    [localeText('Disk Spill Total (GB)', 'Spill Total em Disco (GB)'), kpis.disk_spill_total_gb],
-    [localeText('Memory Spill Total (GB)', 'Spill Total em Memoria (GB)'), kpis.memory_spill_total_gb],
-    [localeText('Shuffle Write Total (GB)', 'Escrita total de shuffle (GB)'), kpis.shuffle_write_total_gb],
-    [localeText('Failed/Retried Stages', 'Etapas com falha/retry'), kpis.stages_with_failure_or_retry],
-  ];
-
   const score = details && details.score != null ? details.score : (Number.isFinite(summary.score) ? summary.score : 0);
   const scoreCls = details ? details.scoreCls : scoreClass(score);
   const gainMin = details && details.gainMin != null ? details.gainMin : (Number.isFinite(summary.estimated_gain_min) ? summary.estimated_gain_min : null);
+  const durationMin = kpis.duration_total_min != null ? Number(kpis.duration_total_min) : null;
 
+  // ── Score ring ──────────────────────────────────────────────
+  const ringColor = scoreCls === 'good' ? 'rgba(75,196,126,0.9)' : scoreCls === 'warn' ? 'var(--yellow)' : 'var(--red)';
+  const ringDash = Math.round((score / 100) * 251.2);
+  const scoreTag = scoreCls === 'good'
+    ? localeText('HEALTHY', 'SAUDÁVEL')
+    : scoreCls === 'warn'
+    ? localeText('WARNING', 'ATENÇÃO')
+    : localeText('CRITICAL', 'CRÍTICO');
+
+  const scoreRingHtml = `
+    <div class="score-ring-wrap">
+      <div style="position:relative;width:100px;height:100px;">
+        <svg class="score-ring-svg" width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="${ringColor}" stroke-width="8"
+            stroke-dasharray="${ringDash} 251.2" stroke-linecap="round"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;" class="score-ring-inner">
+          <span class="score-ring-num" style="color:${ringColor}">${score}</span>
+          <span class="score-ring-lbl">score</span>
+        </div>
+      </div>
+      <span class="score-ring-tag ${scoreCls}">${scoreTag}</span>
+    </div>
+  `;
+
+  // ── Header (diagnosis title + score ring) ──────────────────
+  const verdict = summary.verdict || (details ? details.headline : localeText('AI Diagnostic', 'Diagnóstico de IA'));
+  const diagHeaderHtml = `
+    <div class="diagnosis-header">
+      <div>
+        <div class="diagnosis-eyebrow">${localeText('Diagnosis · Spark Performance', 'Diagnóstico · Performance Spark')}</div>
+        <h2 class="diagnosis-title">${esc(verdict)}</h2>
+        <p class="diagnosis-sub">
+          ${localeText('mode:', 'modo:')} <code style="font-family:var(--mono);font-size:0.8rem;color:var(--accent2)">${esc((parsed.meta && parsed.meta.mode) || '—')}</code>
+          · ${localeText('file:', 'arquivo:')} <code style="font-family:var(--mono);font-size:0.8rem;color:var(--accent2)">${esc((parsed.meta && parsed.meta.job_file) || '—')}</code>
+        </p>
+      </div>
+      ${scoreRingHtml}
+    </div>
+  `;
+
+  // ── Fix banner ────────────────────────────────────────────
+  let fixBannerHtml = '';
+  if (gainMin != null && durationMin != null && gainMin < durationMin) {
+    const reductionPct = Math.round(((durationMin - gainMin) / durationMin) * 100);
+    fixBannerHtml = `
+      <div class="fix-banner">
+        <div class="fix-banner-left">
+          <span class="fix-banner-label">${localeText('Estimated post-fix runtime', 'Tempo estimado pós-fix')}</span>
+          <span class="fix-banner-value">~${gainMin} min</span>
+          <span class="fix-banner-current">${localeText('current:', 'atual:')} ${durationMin} min</span>
+        </div>
+        <div class="fix-banner-right">
+          <div class="fix-metric-row">${localeText('Runtime reduction', 'Redução de tempo')} <span class="fix-pill">−${reductionPct}%</span></div>
+          ${details && details.counts && details.counts.critical > 0 ? `<div class="fix-metric-row">${localeText('Critical issues', 'Problemas críticos')} <span class="fix-pill" style="background:rgba(239,107,107,0.1);color:var(--red);border-color:rgba(239,107,107,0.3)">${details.counts.critical}</span></div>` : ''}
+          ${details && details.counts && details.counts.high > 0 ? `<div class="fix-metric-row">${localeText('High issues', 'Problemas altos')} <span class="fix-pill" style="background:rgba(232,195,58,0.1);color:var(--yellow);border-color:rgba(232,195,58,0.3)">${details.counts.high}</span></div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // ── KPI strip ─────────────────────────────────────────────
+  function kpiCell(label, value, cls, sub) {
+    return `<div class="st-kpi-cell"><span class="st-kpi-label">${esc(label)}</span><span class="st-kpi-value ${cls || ''}">${value ?? '—'}</span>${sub ? `<span class="st-kpi-sub">${esc(sub)}</span>` : ''}</div>`;
+  }
+  const kpiGridHtml = `
+    <div class="st-kpi-grid">
+      ${kpiCell(localeText('Duration', 'Duração'), kpis.duration_total_min != null ? kpis.duration_total_min + ' min' : '—', 'kv-crit', gainMin != null ? localeText(`expected: ~${gainMin} min`, `esperado: ~${gainMin} min`) : '')}
+      ${kpiCell(localeText('Total Tasks', 'Total de Tasks'), kpis.total_tasks != null ? Number(kpis.total_tasks).toLocaleString() : '—', 'kv-warn', kpis.avg_data_per_task_kb != null ? localeText(`${kpis.avg_data_per_task_kb} KB/task avg`, `${kpis.avg_data_per_task_kb} KB/task média`) : '')}
+      ${kpiCell(localeText('Input Volume', 'Volume de Entrada'), kpis.input_volume_gb != null ? kpis.input_volume_gb + ' GB' : '—', 'kv-blue', kpis.shuffle_write_total_gb != null ? localeText(`shuffle write: ${kpis.shuffle_write_total_gb} GB`, `shuffle write: ${kpis.shuffle_write_total_gb} GB`) : '')}
+      ${kpiCell(localeText('Stages with Skew', 'Stages com Skew'), kpis.stages_with_skew ?? '—', 'kv-warn', '')}
+      ${kpiCell(localeText('Disk Spill', 'Spill em Disco'), kpis.disk_spill_total_gb != null ? kpis.disk_spill_total_gb + ' GB' : '—', kpis.disk_spill_total_gb > 0 ? 'kv-crit' : 'kv-ok', '')}
+      ${kpiCell(localeText('Memory Spill', 'Spill em Memória'), kpis.memory_spill_total_gb != null ? kpis.memory_spill_total_gb + ' GB' : '—', kpis.memory_spill_total_gb > 0 ? 'kv-warn' : 'kv-ok', '')}
+      ${kpiCell(localeText('Failed Stages', 'Stages Falhos'), kpis.stages_with_failure_or_retry ?? '0', kpis.stages_with_failure_or_retry > 0 ? 'kv-crit' : 'kv-ok', '')}
+      ${kpiCell(localeText('AI Score', 'Score IA'), score, scoreCls === 'bad' ? 'kv-crit' : scoreCls === 'warn' ? 'kv-warn' : 'kv-ok', '')}
+    </div>
+  `;
+
+  // ── Narrative tab (story timeline from bottlenecks) ────────
+  function dotClass(sev) {
+    if (sev === 'critical') return 'dot-crit';
+    if (sev === 'high')     return 'dot-warn';
+    return 'dot-ok';
+  }
+  function badgeClass(sev) {
+    if (sev === 'critical') return 'badge-crit';
+    if (sev === 'high')     return 'badge-warn';
+    return '';
+  }
+
+  const storySteps = bottlenecks.slice(0, 6).map((b, idx) => {
+    const link = b.code_link || {};
+    const evCells = [
+      b.duration_observed_s != null ? { label: localeText('Observed', 'Observado'), value: b.duration_observed_s + 's' } : null,
+      b.duration_expected_s != null ? { label: localeText('Expected', 'Esperado'), value: b.duration_expected_s + 's' } : null,
+      b.evidence ? { label: localeText('Evidence', 'Evidência'), value: b.evidence } : null,
+      b.operator  ? { label: localeText('Operator', 'Operador'),  value: b.operator } : null,
+    ].filter(Boolean).slice(0, 3);
+
+    const evHtml = evCells.length ? `
+      <div class="step-evidence">
+        <div class="evidence-row-grid" style="grid-template-columns:repeat(${evCells.length},1fr)">
+          ${evCells.map(c => `<div class="evidence-cell"><div class="ev-label">${esc(c.label)}</div><div class="ev-value">${esc(c.value)}</div></div>`).join('')}
+        </div>
+        ${b.root_cause ? `<div class="gain-strip-story"><div class="gain-icon-story" aria-hidden="true"></div><span style="color:var(--text-dim)">${esc(b.root_cause)}</span></div>` : ''}
+      </div>` : '';
+
+    return `
+      <div class="story-step">
+        <div class="step-dot ${dotClass(b.severity || 'medium')}">${String(idx+1).padStart(2,'0')}</div>
+        <div class="step-content">
+          <div class="step-header">
+            <span class="step-name">${esc(b.title || localeText('Untitled', 'Sem título'))}</span>
+            <span class="step-badge ${badgeClass(b.severity || 'medium')}">${esc(localizedSeverityLabel(b.severity || 'medium'))}</span>
+          </div>
+          <p class="step-desc">${esc(b.observed_effect || b.evidence || '')}</p>
+          ${evHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const narrativeTabHtml = `
+    <div class="st-section-title">${localeText('What happened with this job', 'O que aconteceu com este job')}</div>
+    <div class="story-timeline">${storySteps || `<div class="spark-empty">${localeText('No narrative data available.', 'Nenhum dado de narrativa disponível.')}</div>`}</div>
+  `;
+
+  // ── Bottlenecks tab ────────────────────────────────────────
+  const bottleneckTabHtml = `
+    <div class="st-section-title">${localeText('Identified bottlenecks', 'Gargalos identificados')}</div>
+    ${bottlenecks.map((b) => {
+      const isCrit = b.severity === 'critical';
+      const isWarn = b.severity === 'high';
+      const idCls  = isCrit ? 'crit' : isWarn ? 'warn' : '';
+      const borderColor = isCrit ? 'var(--red)' : isWarn ? 'var(--yellow)' : 'var(--blue)';
+      const link = b.code_link || {};
+      const hasBefore = b.before_code || (link.snippet);
+      const hasAfter  = b.after_code;
+      const codeDiff = (hasBefore || hasAfter) ? `
+        <div class="code-diff-grid">
+          <div class="code-panel-story">
+            <div class="code-panel-label before">${localeText('BEFORE (current)', 'ANTES (atual)')}</div>
+            <pre class="code-block-story">${esc(b.before_code || link.snippet || '')}</pre>
+          </div>
+          <div class="code-panel-story">
+            <div class="code-panel-label after">${localeText('AFTER (implement)', 'DEPOIS (implementar)')}</div>
+            <pre class="code-block-story">${esc(b.after_code || '')}</pre>
+          </div>
+        </div>` : '';
+
+      return `
+        <div class="st-bottleneck-card" style="border-left:3px solid ${borderColor}" id="bottleneck-${esc(b.id || '')}">
+          <div class="st-bn-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="st-bn-id ${idCls}">${esc(b.id || 'B?')}</span>
+              <span class="st-bn-title">${esc(b.title || localeText('Untitled bottleneck', 'Gargalo sem título'))}</span>
+            </div>
+            <span class="step-badge ${badgeClass(b.severity || 'medium')}">${esc(localizedSeverityLabel(b.severity || 'medium'))}</span>
+          </div>
+          <div class="st-bn-body">
+            <div class="kv-grid" style="margin-bottom:10px;">
+              ${b.evidence    ? `<div class="kv-item"><div class="k">${localeText('Evidence','Evidência')}</div><div>${esc(b.evidence)}</div></div>` : ''}
+              ${b.root_cause  ? `<div class="kv-item"><div class="k">${localeText('Root Cause','Causa Raiz')}</div><div>${esc(b.root_cause)}</div></div>` : ''}
+              ${b.observed_effect ? `<div class="kv-item"><div class="k">${localeText('Observed Effect','Efeito Observado')}</div><div>${esc(b.observed_effect)}</div></div>` : ''}
+              ${b.operator    ? `<div class="kv-item"><div class="k">${localeText('Operator','Operador')}</div><div>${esc(b.operator)}</div></div>` : ''}
+              ${link.function_name ? `<div class="kv-item"><div class="k">${localeText('Code Link','Link de Código')}</div><div>${localeText('Lines','Linhas')} ${link.line_start ?? '?'}-${link.line_end ?? '?'} · ${esc(link.function_name)}</div></div>` : ''}
+            </div>
+            ${codeDiff}
+            <div class="gain-strip-story" style="margin-top:${codeDiff ? '0' : '10px'}">
+              <div class="gain-icon-story" aria-hidden="true"></div>
+              <strong style="color:var(--green)">${localeText('Expected gain:','Ganho esperado:')}</strong>
+              <span style="color:var(--text-dim)">${esc(b.expected_gain || link.explanation || localeText('See action plan for details.', 'Veja o plano de ação para detalhes.'))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('') || `<div class="spark-empty">${localeText('No bottlenecks detected.', 'Nenhum gargalo detectado.')}</div>`}
+  `;
+
+  // ── Executors tab (stages table + KPIs) ───────────────────
   const stagesRows = stages.map((st) => {
     const ids = Array.isArray(st.bottleneck_ids) ? st.bottleneck_ids : [];
     const links = ids.length
       ? ids.map((id) => `<a class="id-link" href="#bottleneck-${esc(id)}">${esc(id)}</a>`).join('')
       : '—';
-
-    return `
-      <tr>
-        <td>${st.id ?? '—'}</td>
-        <td>${st.duration_s ?? '—'}</td>
-        <td>${st.task_count ?? '—'}</td>
-        <td>${st.skew_ratio ?? '—'}</td>
-        <td>${st.shuffle_write_gb ?? '—'}</td>
-        <td>${st.shuffle_write_time_s ?? '—'}</td>
-        <td>${st.disk_spill_gb ?? '—'}</td>
-        <td>${st.memory_spill_gb ?? '—'}</td>
-        <td>${st.fetch_wait_ms ?? '—'}</td>
-        <td><span class="status-pill ${esc(st.status || 'ok')}">${esc(localizedStatusLabel(st.status || 'ok'))}</span></td>
-        <td>${links}</td>
-      </tr>
-    `;
+    return `<tr>
+      <td>${st.id ?? '—'}</td>
+      <td>${st.duration_s ?? '—'}s</td>
+      <td>${st.task_count != null ? Number(st.task_count).toLocaleString() : '—'}</td>
+      <td>${st.skew_ratio ?? '—'}</td>
+      <td>${st.shuffle_write_gb ?? '—'} GB</td>
+      <td>${st.disk_spill_gb ?? '—'} GB</td>
+      <td><span class="status-pill ${esc(st.status || 'ok')}">${esc(localizedStatusLabel(st.status || 'ok'))}</span></td>
+      <td>${links}</td>
+    </tr>`;
   }).join('');
 
-  const bottleneckCards = bottlenecks.map((b) => {
-    const link = b && b.code_link ? b.code_link : {};
-    const affected = Array.isArray(b.stages_affected) ? b.stages_affected.join(', ') : '—';
-
-    return `
-      <article class="bottleneck-card ${esc(b.severity || 'medium')}" id="bottleneck-${esc(b.id || '')}">
-        <div class="bottleneck-head">
-          <div><strong>${esc(b.id || 'B?')} · ${esc(b.title || localeText('Untitled bottleneck', 'Gargalo sem titulo'))}</strong></div>
-          <span class="sev-badge ${esc(b.severity || 'medium')}">${esc(localizedSeverityLabel(b.severity || 'medium'))}</span>
-        </div>
-        <div class="kv-grid">
-          <div class="kv-item"><div class="k">${localeText('Type', 'Tipo')}</div><div>${esc(localizedBottleneckType(b.type || 'other'))}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Stages Affected', 'Etapas afetadas')}</div><div>${esc(affected)}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Operator', 'Operador')}</div><div>${esc(b.operator || naLabel())}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Duration (obs/exp)', 'Duracao (obs/exp)')}</div><div>${b.duration_observed_s ?? '—'} / ${b.duration_expected_s ?? '—'} s</div></div>
-        </div>
-        <div class="kv-grid">
-          <div class="kv-item"><div class="k">${localeText('Evidence', 'Evidencia')}</div><div>${esc(b.evidence || naLabel())}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Root Cause', 'Causa Raiz')}</div><div>${esc(b.root_cause || '—')}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Observed Effect', 'Efeito Observado')}</div><div>${esc(b.observed_effect || '—')}</div></div>
-        </div>
-        <div class="kv-grid">
-          <div class="kv-item"><div class="k">${localeText('Code Link', 'Link de Codigo')}</div><div>${localeText('Lines', 'Linhas')} ${link.line_start ?? naLabel()} - ${link.line_end ?? naLabel()} - ${esc(link.function_name || naLabel())}</div></div>
-          <div class="kv-item"><div class="k">${localeText('Code/Log Correlation', 'Correlacao Codigo/Log')}</div><div>${esc(link.explanation || naLabel())}</div></div>
-        </div>
-        ${link.snippet ? `<div class="code-box">${esc(link.snippet)}</div>` : ''}
-      </article>
-    `;
-  }).join('');
-
-  const clusterConfigHtml = clusterConfigs.length
-    ? clusterConfigs.map((cfg) => `
-      <div class="kv-item">
-        <div class="k">${esc(cfg.bottleneck_id || 'B?')} · ${esc(cfg.name || 'Config')}</div>
-        <div style="margin-bottom:6px;">${esc(cfg.rationale || '')}</div>
-        <div style="margin-bottom:8px;color:var(--text-dim)">${esc(cfg.estimated_impact || '')}</div>
-        <div class="code-box">${esc(cfg.code || '')}</div>
-      </div>
-    `).join('')
-    : `<div style="color:var(--text-dim)">${localeText('No cluster configs suggested.', 'Nenhuma configuracao de cluster sugerida.')}</div>`;
-
-  const codeFixesHtml = codeFixes.length
-    ? codeFixes.map((fix) => `
-      <article class="fix-card">
-        <div class="fix-head">
-          <div class="fix-title">${esc(fix.bottleneck_id || 'B?')} · ${esc(fix.title || localeText('Code fix', 'Correcao de codigo'))}</div>
-          <div class="fix-location">${localeText('Lines', 'Linhas')} ${fix.line_start ?? naLabel()} - ${fix.line_end ?? naLabel()} - ${esc(fix.function_name || naLabel())}</div>
-        </div>
-        <div class="fix-body">
-          <div>${esc(fix.problem_explanation || '')}</div>
-          <ol class="fix-checklist">
-            <li>${currentLang === 'pt' ? 'Localize o trecho indicado e confirme o comportamento atual.' : 'Locate the indicated code section and confirm the current behavior.'}</li>
-            <li>${currentLang === 'pt' ? 'Substitua o bloco atual pelo bloco "After" mantendo contratos de entrada/saída.' : 'Replace the current block with the "After" block, keeping input/output contracts.'}</li>
-            <li>${currentLang === 'pt' ? `Valide em staging e compare o ganho no gargalo ${esc(fix.bottleneck_id || 'informado')}.` : `Validate in staging and compare the gain on bottleneck ${esc(fix.bottleneck_id || 'reported')}.`}</li>
-          </ol>
-          <div class="code-compare">
-            <div>
-              <div class="k" style="margin-bottom:4px;">${currentLang === 'pt' ? 'Before (Atual)' : 'Before (Current)'}</div>
-              <div class="code-box">${esc(fix.before_code || '')}</div>
-            </div>
-            <div>
-              <div class="k" style="margin-bottom:4px;">${currentLang === 'pt' ? 'After (Implementar)' : 'After (Implement)'}</div>
-              <div class="code-box">${esc(fix.after_code || '')}</div>
-            </div>
-          </div>
-          <div class="fix-impact"><strong>${localeText('Expected Gain:', 'Ganho Esperado:')}</strong> ${esc(fix.expected_gain || naLabel())}</div>
-        </div>
-      </article>
-    `).join('')
-    : `<div style="color:var(--text-dim)">${localeText('No code fixes suggested.', 'Nenhuma correcao de codigo sugerida.')}</div>`;
-
-  return `
-    <div class="llm-json-grid">
-      <section class="llm-card">
-        <div class="llm-card-title">${metricHelp(localeText('AI Component Score', 'Score do Componente de IA'), 'ai_component')}</div>
-        <div class="health-wrap">
-          ${metricValueBubble(`<div class="health-score ${scoreCls}">${score}</div>`, getLlmScorePopup(details))}
-          <div style="flex:1; min-width:220px;">
-            <div><strong>${esc(details ? details.headline : (summary.verdict || localeText('No verdict', 'Sem veredito')))}</strong></div>
-            <div class="gain-badge">${localeText('Component score in overall metric', 'Score do componente na metrica geral')}</div>
-            ${gainMin != null ? `<div class="spark-note">${localeText('Estimated post-fix runtime:', 'Runtime estimado apos ajuste:')} ${gainMin} min</div>` : ''}
-            <div class="spark-note">${esc(details ? details.formula : localeText('Structured AI score from diagnosed bottleneck severity.', 'Score estruturado da IA a partir da severidade dos gargalos diagnosticados.'))}</div>
-            <div style="margin-top:8px; color:var(--text-dim); font-size:0.76rem;">
-              ${localeText('mode:', 'modo:')} ${esc((parsed.meta && parsed.meta.mode) || naLabel())} | ${localeText('file:', 'arquivo:')} ${esc((parsed.meta && parsed.meta.job_file) || naLabel())} | ${localeText('log:', 'log:')} ${esc((parsed.meta && parsed.meta.log_file) || naLabel())}
-            </div>
-            ${details ? `<div class="spark-note">${metricChip(`${localeText('Critical', 'Critico')} ${details.counts.critical}`, 'ai_component', details.counts.critical > 0 ? 'bad' : 'good')}${metricChip(`${localeText('High', 'Alto')} ${details.counts.high}`, 'ai_component', details.counts.high > 0 ? 'warn' : 'good')}${metricChip(`${localeText('Medium', 'Medio')} ${details.counts.medium}`, 'ai_component')}</div>` : ''}
-          </div>
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('KPIs', 'KPIs')}</div>
-        <div class="llm-kpis">
-          ${coreKpis.map(([k, v]) => `<div class="llm-kpi"><div class="k">${esc(k)}</div><div class="v">${v ?? '—'}</div></div>`).join('')}
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Stages', 'Etapas')}</div>
-        <div class="table-wrap" style="margin-bottom:0;">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>${localeText('Duration(s)', 'Duracao(s)')}</th><th>${localeText('Tasks', 'Tarefas')}</th><th>Skew</th><th>Shuffle GB</th><th>${localeText('SW Time(s)', 'Tempo SW(s)')}</th>
-                <th>${localeText('Disk Spill(GB)', 'Spill em Disco(GB)')}</th><th>${localeText('Mem Spill(GB)', 'Spill em Memoria(GB)')}</th><th>${localeText('Fetch Wait(ms)', 'Espera Fetch(ms)')}</th><th>${localeText('Status', 'Status')}</th><th>${localeText('Bottlenecks', 'Gargalos')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${stagesRows || `<tr><td colspan="11">${localeText('No stage diagnostics.', 'Nenhum diagnostico de stage.')}</td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Bottlenecks', 'Gargalos')}</div>
-        <div class="bottleneck-list">
-          ${bottleneckCards || `<div style="color:var(--text-dim)">${localeText('No bottlenecks detected.', 'Nenhum gargalo detectado.')}</div>`}
-        </div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Action Plan - Cluster Configs', 'Plano de Acao: Configuracoes de Cluster')}</div>
-        <div class="kv-grid">${clusterConfigHtml}</div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Action Plan - Code Fixes', 'Plano de Acao: Correcoes de Codigo')}</div>
-        <div class="fix-list">${codeFixesHtml}</div>
-      </section>
-
-      <section class="llm-card">
-        <div class="llm-card-title">${localeText('Limitations', 'Limitacoes')}</div>
-        <div>${esc(parsed.limitations || '—')}</div>
-      </section>
+  const executorsTabHtml = `
+    <div class="st-section-title">${localeText('Stage breakdown', 'Detalhamento de stages')}</div>
+    <div class="table-wrap" style="margin-bottom:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>${localeText('Duration', 'Duração')}</th>
+            <th>${localeText('Tasks', 'Tasks')}</th>
+            <th>Skew</th>
+            <th>Shuffle</th>
+            <th>Disk Spill</th>
+            <th>${localeText('Status', 'Status')}</th>
+            <th>${localeText('Bottlenecks', 'Gargalos')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stagesRows || `<tr><td colspan="8" style="color:var(--text-dim)">${localeText('No stage diagnostics.', 'Nenhum diagnóstico de stage.')}</td></tr>`}
+        </tbody>
+      </table>
     </div>
   `;
+
+  // ── Action Plan tab ────────────────────────────────────────
+  const clusterConfigHtml = clusterConfigs.length
+    ? clusterConfigs.map((cfg, i) => `
+      <div class="action-plan-card">
+        <div class="ap-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="ap-num">${String(i+1).padStart(2,'0')}</span>
+            <span class="ap-title">${esc(cfg.name || 'Config')}</span>
+          </div>
+          <span class="ap-location">${esc(cfg.bottleneck_id || '')}</span>
+        </div>
+        <div class="ap-body">
+          <p style="margin-bottom:8px;">${esc(cfg.rationale || '')}</p>
+          ${cfg.estimated_impact ? `<p style="margin-bottom:8px;color:var(--text-mute);font-size:0.76rem;">${esc(cfg.estimated_impact)}</p>` : ''}
+          ${cfg.code ? `<pre class="code-box" style="margin-top:8px;">${esc(cfg.code)}</pre>` : ''}
+        </div>
+      </div>
+    `).join('')
+    : '';
+
+  const actionPlanTabHtml = `
+    ${clusterConfigs.length ? `<div class="st-section-title">${localeText('Cluster configurations', 'Configurações de cluster')}</div>${clusterConfigHtml}` : ''}
+    <div class="st-section-title" style="margin-top:${clusterConfigs.length ? '1.5rem' : '0'}">${localeText('Code fixes', 'Correções de código')}</div>
+    ${codeFixes.length
+      ? codeFixes.map((fix, i) => `
+        <div class="action-plan-card">
+          <div class="ap-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="ap-num">${String(i+1).padStart(2,'0')}</span>
+              <span class="ap-title">${esc(fix.title || localeText('Code fix', 'Correção de código'))}</span>
+            </div>
+            <span class="ap-location">${localeText('lines', 'linhas')} ${fix.line_start ?? '?'}–${fix.line_end ?? '?'} · ${esc(fix.function_name || fix.bottleneck_id || '')}</span>
+          </div>
+          <div class="ap-body">
+            <p style="margin-bottom:8px;">${esc(fix.problem_explanation || '')}</p>
+            <ol class="ap-steps">
+              <li>${currentLang === 'pt' ? 'Localize o trecho indicado e confirme o comportamento atual.' : 'Locate the indicated section and confirm the current behavior.'}</li>
+              <li>${currentLang === 'pt' ? 'Substitua pelo bloco "Depois" mantendo contratos de entrada/saída.' : 'Replace with the "After" block, keeping input/output contracts.'}</li>
+              <li>${currentLang === 'pt' ? `Valide em staging e meça o ganho no gargalo ${esc(fix.bottleneck_id || '')}.` : `Validate in staging and measure the gain on bottleneck ${esc(fix.bottleneck_id || '')}.`}</li>
+            </ol>
+            <div class="code-diff-grid" style="margin-top:12px;">
+              <div class="code-panel-story">
+                <div class="code-panel-label before">${currentLang === 'pt' ? 'ANTES (atual)' : 'BEFORE (current)'}</div>
+                <pre class="code-block-story">${esc(fix.before_code || '')}</pre>
+              </div>
+              <div class="code-panel-story">
+                <div class="code-panel-label after">${currentLang === 'pt' ? 'DEPOIS (implementar)' : 'AFTER (implement)'}</div>
+                <pre class="code-block-story">${esc(fix.after_code || '')}</pre>
+              </div>
+            </div>
+            ${fix.expected_gain ? `<div class="gain-strip-story" style="margin-top:0;"><div class="gain-icon-story" aria-hidden="true"></div><strong style="color:var(--green)">${localeText('Expected gain:', 'Ganho esperado:')}</strong> <span style="color:var(--text-dim)">${esc(fix.expected_gain)}</span></div>` : ''}
+          </div>
+        </div>
+      `).join('')
+      : `<div class="spark-empty">${localeText('No code fixes suggested.', 'Nenhuma correção de código sugerida.')}</div>`
+    }
+    ${parsed.limitations ? `<div class="st-section-title" style="margin-top:1.5rem;">${localeText('Limitations', 'Limitações')}</div><div style="color:var(--text-dim);font-size:0.8rem;line-height:1.65;">${esc(parsed.limitations)}</div>` : ''}
+  `;
+
+  // ── Tabs assembly ─────────────────────────────────────────
+  const tabId = 'res-tabs-' + Math.random().toString(36).slice(2,7);
+  const tabsHtml = `
+    <div id="${tabId}" class="res-tabs-nav" style="margin-bottom:1.5rem;">
+      <button class="res-tab-btn active" type="button" data-resgroup="${tabId}" data-restab="narrative">${localeText('Job Narrative', 'Narrativa do Job')}</button>
+      <button class="res-tab-btn" type="button" data-resgroup="${tabId}" data-restab="bottlenecks">${localeText('Bottlenecks', 'Gargalos')} ${bottlenecks.length > 0 ? `(${bottlenecks.length})` : ''}</button>
+      <button class="res-tab-btn" type="button" data-resgroup="${tabId}" data-restab="executors">${localeText('Stages', 'Stages')} ${stages.length > 0 ? `(${stages.length})` : ''}</button>
+      <button class="res-tab-btn" type="button" data-resgroup="${tabId}" data-restab="actionplan">${localeText('Action Plan', 'Plano de Ação')}</button>
+    </div>
+    <div class="res-tab-pane active" data-resgroup="${tabId}" data-respane="narrative">${narrativeTabHtml}</div>
+    <div class="res-tab-pane" data-resgroup="${tabId}" data-respane="bottlenecks">${bottleneckTabHtml}</div>
+    <div class="res-tab-pane" data-resgroup="${tabId}" data-respane="executors">${executorsTabHtml}</div>
+    <div class="res-tab-pane" data-resgroup="${tabId}" data-respane="actionplan">${actionPlanTabHtml}</div>
+  `;
+
+  return `<div class="llm-storytelling">${diagHeaderHtml}${fixBannerHtml}${kpiGridHtml}${tabsHtml}</div>`;
 }
 
 function getSqlPlanChildren(node) {

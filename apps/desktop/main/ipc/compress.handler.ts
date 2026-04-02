@@ -83,11 +83,15 @@ export function registerCompressHandlers(pyBaseUrl: string): void {
       throw new Error('content is required')
     }
 
-    const defaultName = suggestedName || `spark_report_${Date.now()}.md`
+    const defaultName = suggestedName || `spark_report_${Date.now()}.html`
+    const ext = (defaultName.split('.').pop() || '').toLowerCase()
+    const isHtml = ext === 'html'
     const { filePath, canceled } = await dialog.showSaveDialog({
-      title: 'Salvar relatorio Markdown',
+      title: isHtml ? 'Salvar relatório HTML' : 'Salvar relatório Markdown',
       defaultPath: path.join(app.getPath('documents'), defaultName),
-      filters: [{ name: 'Markdown', extensions: ['md'] }],
+      filters: isHtml
+        ? [{ name: 'HTML', extensions: ['html'] }]
+        : [{ name: 'Markdown', extensions: ['md'] }],
     })
 
     if (canceled || !filePath) {
