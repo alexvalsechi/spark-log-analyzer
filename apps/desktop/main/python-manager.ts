@@ -123,8 +123,8 @@ export async function startPython(): Promise<string> {
     const stdoutChunks: string[] = []
     const stderrChunks: string[] = []
     const spawnOpts = candidate.cwd
-      ? { stdio: 'pipe' as const, cwd: candidate.cwd, windowsHide: true }
-      : { stdio: 'pipe' as const, windowsHide: true }
+      ? { stdio: 'pipe' as const, cwd: candidate.cwd, windowsHide: true, detached: process.platform !== 'win32' }
+      : { stdio: 'pipe' as const, windowsHide: true, detached: process.platform !== 'win32' }
 
     pyProcess = spawn(candidate.command, candidate.args, spawnOpts)
     pyProcess.stdout?.on('data', (d) => appendOutput(stdoutChunks, d.toString()))
@@ -158,6 +158,15 @@ export async function startPython(): Promise<string> {
 }
 
 export function stopPython(): void {
-  pyProcess?.kill()
+  if (!pyProcess) return
+  const pid = pyProcess.pid
   pyProcess = null
+  if (pid === undefined) return
+
+  if (process.platform === 'win32') {
+    // Kill the entire process tree so PyInstaller child processes don't linger
+    spawn('taskkill', ['/F', '/T', '/PID', String(pid)], { stdio: 'ignore', windowsHide: true })
+  } else {
+    try { process.kill(-pid, 'SIGKILL') } catch { /* process already gone */ }
+  }
 }

@@ -83,19 +83,22 @@ class GeminiAdapter(BaseLLMAdapter):
 
     def __init__(self, api_key: str):
         try:
-            import google.generativeai as genai  # type: ignore
+            from google import genai  # type: ignore
         except ImportError as e:
-            raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai") from e
-        genai.configure(api_key=api_key)
-        self._model = genai.GenerativeModel(self.MODEL)
+            raise ImportError("google-genai package not installed. Run: pip install google-genai") from e
+        self._client = genai.Client(api_key=api_key)
 
     def _complete(self, prompt: str) -> str:
-        from google.generativeai.types import GenerationConfig  # type: ignore
-        response = self._model.generate_content(
-            prompt,
-            generation_config=GenerationConfig(temperature=0, max_output_tokens=16384),
+        from google.genai import types  # type: ignore
+        response = self._client.models.generate_content(
+            model=self.MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0,
+                max_output_tokens=16384,
+            ),
         )
-        return response.text
+        return response.text or ""
 
 
 class NoOpAdapter(BaseLLMAdapter):

@@ -17,7 +17,7 @@ starlette-sessions>=0.0.5
 # LLM providers (optional — install only what you need)
 openai>=1.30.0
 anthropic>=0.28.0
-google-generativeai>=0.8.0
+google-genai>=1.0.0
 
 # Dev / testing
 pytest>=8.2.0

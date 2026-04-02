@@ -54,11 +54,13 @@ class LocalReducedJobRunner:
                     api_key=api_key,
                     language=language,
                 )
-                job.status = JobStatus.DONE
-                # Desktop already keeps the reduced markdown locally.
-                job.reduced_report = None
+                # Assign all fields before setting status to DONE to avoid a
+                # race condition where the polling endpoint returns DONE but
+                # llm_analysis is still None.
+                job.reduced_report = None  # Desktop keeps the reduced markdown locally.
                 job.llm_analysis = result.llm_analysis
                 job.summary = result.summary
+                job.status = JobStatus.DONE
                 logger.info("Local reduced job finished: %s", job_id)
             except Exception as exc:
                 logger.exception("Local reduced job failed: %s", job_id)

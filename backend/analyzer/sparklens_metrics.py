@@ -184,6 +184,8 @@ def _build_llm_context(report: dict) -> dict:
     return {
         "app": report["app"],
         "cluster": report["cluster"],
+        "driver_analysis": report["driver_analysis"],
+        "environment": report["environment"],
         "scalability_simulation": report["scalability_simulation"],
         "top_bottlenecks": report["top_bottlenecks"],
         "stages_summary": [
@@ -204,6 +206,8 @@ def _build_state() -> dict:
         "jobs": {},
         "stage_to_job": {},
         "stages": {},
+        "stage_attempts": {},  # (stage_id, attempt_id) -> status
+        "environment": {},  # relevant spark properties
         "host_analysis": defaultdict(
             lambda: {
                 "executor_ids": set(),
@@ -232,6 +236,8 @@ def _get_stage(state: dict, stage_id: int) -> dict:
             "wall_ms": 0,
             "task_run_ms_total": 0,
             "task_run_times": [],
+            "task_count_accepted": 0,
+            "task_count_filtered": 0,
             "input_bytes": 0,
             "output_bytes": 0,
             "shuffle_read_bytes": 0,
@@ -241,6 +247,11 @@ def _get_stage(state: dict, stage_id: int) -> dict:
             "gc_ms_total": 0,
             "shuffle_write_time_ns_total": 0,
             "shuffle_read_fetch_wait_ms_total": 0,
+            "peak_execution_memory": 0,
+            "executor_cpu_time_ns_total": 0,
+            "executor_deserialize_time_ms_total": 0,
+            "result_serialization_time_ms_total": 0,
+            "result_size_bytes_total": 0,
         }
     return state["stages"][stage_id]
 
@@ -263,6 +274,19 @@ def _process_events(events) -> dict:
             continue
         if event_type == "SparkListenerApplicationEnd":
             state["app"]["end_ms"] = int(event.get("Timestamp", 0) or 0)
+            continue
+        if event_type == "SparkListenerEnvironmentUpdate":
+            spark_props = event.get("Spark Properties", {}) or {}
+            relevant_keys = [
+                "spark.executor.instances", "spark.executor.memory",
+                "spark.executor.cores", "spark.driver.memory",
+                "spark.sql.autoBroadcastJoinThreshold", "spark.scheduler.mode",
+                "spark.sql.shuffle.partitions", "spark.sql.adaptive.enabled",
+                "spark.dynamicAllocation.enabled",
+            ]
+            for key in relevant_keys:
+                if key in spark_props:
+                    state["environment"][key] = spark_props[key]
             continue
         if event_type == "SparkListenerResourceProfileAdded" and not state["resource_profile"]:
             state["resource_profile"] = event
@@ -320,6 +344,32 @@ def _process_events(events) -> dict:
             stage_id = int(stage_info.get("Stage ID", -1))
             if stage_id < 0:
                 continue
+            attempt_id = int(stage_info.get("Stage Attempt ID", 0) or 0)
+            # Track stage attempts; for multiple attempts, keep only the latest
+            prev_attempt = state["stage_attempts"].get(stage_id, -1)
+            if attempt_id > prev_attempt:
+                # Reset stage data for the new attempt
+                if prev_attempt >= 0 and stage_id in state["stages"]:
+                    old = _get_stage(state, stage_id)
+                    old["task_run_ms_total"] = 0
+                    old["task_run_times"] = []
+                    old["task_count_accepted"] = 0
+                    old["task_count_filtered"] = 0
+                    old["input_bytes"] = 0
+                    old["output_bytes"] = 0
+                    old["shuffle_read_bytes"] = 0
+                    old["shuffle_write_bytes"] = 0
+                    old["spill_memory_bytes"] = 0
+                    old["spill_disk_bytes"] = 0
+                    old["gc_ms_total"] = 0
+                    old["shuffle_write_time_ns_total"] = 0
+                    old["shuffle_read_fetch_wait_ms_total"] = 0
+                    old["peak_execution_memory"] = 0
+                    old["executor_cpu_time_ns_total"] = 0
+                    old["executor_deserialize_time_ms_total"] = 0
+                    old["result_serialization_time_ms_total"] = 0
+                    old["result_size_bytes_total"] = 0
+                state["stage_attempts"][stage_id] = attempt_id
             stage = _get_stage(state, stage_id)
             stage["name"] = stage_info.get("Stage Name", stage["name"])
             stage["num_tasks"] = int(stage_info.get("Number of Tasks", stage["num_tasks"]) or 0)
@@ -339,9 +389,23 @@ def _process_events(events) -> dict:
         stage_id = int(event.get("Stage ID", -1))
         if stage_id < 0:
             continue
+        # Filter tasks from older stage attempts
+        task_attempt_id = int(event.get("Stage Attempt ID", 0) or 0)
+        current_attempt = state["stage_attempts"].get(stage_id, 0)
+        if task_attempt_id < current_attempt:
+            continue
         stage = _get_stage(state, stage_id)
         task_info = event.get("Task Info", {}) or {}
         task_metrics = event.get("Task Metrics", {}) or {}
+
+        # Filter failed and speculative tasks (instruction #3)
+        if task_info.get("Failed", False):
+            stage["task_count_filtered"] += 1
+            continue
+        if task_info.get("Speculative", False):
+            stage["task_count_filtered"] += 1
+            continue
+
         shuffle_read = task_metrics.get("Shuffle Read Metrics", {}) or {}
         shuffle_write = task_metrics.get("Shuffle Write Metrics", {}) or {}
         input_metrics = task_metrics.get("Input Metrics", {}) or {}
@@ -350,6 +414,7 @@ def _process_events(events) -> dict:
         executor_run_ms = int(task_metrics.get("Executor Run Time", 0) or 0)
         stage["task_run_ms_total"] += executor_run_ms
         stage["task_run_times"].append(executor_run_ms)
+        stage["task_count_accepted"] += 1
         stage["input_bytes"] += int(input_metrics.get("Bytes Read", 0) or 0)
         stage["output_bytes"] += int(output_metrics.get("Bytes Written", 0) or 0)
         stage["shuffle_read_bytes"] += int(
@@ -362,6 +427,14 @@ def _process_events(events) -> dict:
         stage["gc_ms_total"] += int(task_metrics.get("JVM GC Time", 0) or 0)
         stage["shuffle_write_time_ns_total"] += int(shuffle_write.get("Shuffle Write Time", 0) or 0)
         stage["shuffle_read_fetch_wait_ms_total"] += int(shuffle_read.get("Fetch Wait Time", 0) or 0)
+        # New quantitative fields
+        peak_mem = int(task_metrics.get("Peak Execution Memory", 0) or 0)
+        if peak_mem > stage["peak_execution_memory"]:
+            stage["peak_execution_memory"] = peak_mem
+        stage["executor_cpu_time_ns_total"] += int(task_metrics.get("Executor CPU Time", 0) or 0)
+        stage["executor_deserialize_time_ms_total"] += int(task_metrics.get("Executor Deserialize Time", 0) or 0)
+        stage["result_serialization_time_ms_total"] += int(task_metrics.get("Result Serialization Time", 0) or 0)
+        stage["result_size_bytes_total"] += int(task_metrics.get("Result Size", 0) or 0)
 
         launch_ms = int(task_info.get("Launch Time", 0) or 0)
         finish_ms = int(task_info.get("Finish Time", 0) or 0)
@@ -436,9 +509,63 @@ def _finalize_report(state: dict) -> dict:
         )
 
     total_stage_runtime_ms = sum(stage["task_run_ms_total"] for stage in state["stages"].values())
+    total_io_bytes = sum(
+        stage["input_bytes"] + stage["output_bytes"] + stage["shuffle_read_bytes"] + stage["shuffle_write_bytes"]
+        for stage in state["stages"].values()
+    )
     top_wall_stage_ids = {stage["stage_id"] for stage in sorted(state["stages"].values(), key=lambda item: item["wall_ms"], reverse=True)[:3]}
     stages_output = []
     bottleneck_candidates = []
+
+    # ── Driver vs Executor time decomposition ──────────────────────────────
+    # Build sorted list of (start, end) intervals for all stages to find gaps
+    stage_intervals = []
+    for stage in state["stages"].values():
+        if stage["start_ms"] > 0 and stage["end_ms"] > 0:
+            stage_intervals.append((stage["start_ms"], stage["end_ms"]))
+    stage_intervals.sort()
+
+    # Merge overlapping stage intervals
+    merged_stage_intervals = []
+    for start, end in stage_intervals:
+        if merged_stage_intervals and start <= merged_stage_intervals[-1][1]:
+            merged_stage_intervals[-1] = (merged_stage_intervals[-1][0], max(merged_stage_intervals[-1][1], end))
+        else:
+            merged_stage_intervals.append((start, end))
+
+    # Driver time = app duration minus time when any stage was active
+    total_stage_active_ms = sum(end - start for start, end in merged_stage_intervals)
+    driver_time_ms = max(0, app_duration_ms - total_stage_active_ms)
+    executor_time_ms = total_stage_active_ms
+    driver_pct = _safe_pct(driver_time_ms, app_duration_ms)
+
+    # Build driver time intervals (gaps between merged stage intervals)
+    driver_intervals = []
+    if merged_stage_intervals and app_start_ms < merged_stage_intervals[0][0]:
+        driver_intervals.append({
+            "start_ms": app_start_ms,
+            "end_ms": merged_stage_intervals[0][0],
+            "duration_ms": merged_stage_intervals[0][0] - app_start_ms,
+            "label": "pre_first_stage",
+        })
+    for i in range(len(merged_stage_intervals) - 1):
+        gap_start = merged_stage_intervals[i][1]
+        gap_end = merged_stage_intervals[i + 1][0]
+        if gap_end > gap_start:
+            driver_intervals.append({
+                "start_ms": gap_start,
+                "end_ms": gap_end,
+                "duration_ms": gap_end - gap_start,
+                "label": "inter_stage_gap",
+            })
+    if merged_stage_intervals and merged_stage_intervals[-1][1] < app_end_ms:
+        driver_intervals.append({
+            "start_ms": merged_stage_intervals[-1][1],
+            "end_ms": app_end_ms,
+            "duration_ms": app_end_ms - merged_stage_intervals[-1][1],
+            "label": "post_last_stage",
+        })
+
     for stage_id in sorted(state["stages"]):
         stage = state["stages"][stage_id]
         wall_ms = stage["wall_ms"]
@@ -446,14 +573,19 @@ def _finalize_report(state: dict) -> dict:
         used_pct = _safe_pct(stage["task_run_ms_total"], available_ms)
         wasted_pct = max(0.0, 100.0 - used_pct) if available_ms > 0 else 0.0
         sorted_task_times = sorted(stage["task_run_times"])
+        task_count = len(sorted_task_times)
         min_task_ms = sorted_task_times[0] if sorted_task_times else 0
-        median_task_ms = sorted_task_times[len(sorted_task_times) // 2] if sorted_task_times else 0
+        median_task_ms = sorted_task_times[task_count // 2] if sorted_task_times else 0
         max_task_ms = sorted_task_times[-1] if sorted_task_times else 0
+        avg_task_ms = (stage["task_run_ms_total"] / task_count) if task_count > 0 else 0.0
         task_skew = _safe_ratio(max_task_ms, median_task_ms) if median_task_ms > 0 else 0.0
+        # Skew per spec: max/avg (Sparklens definition)
+        skew_avg_ratio = _safe_ratio(max_task_ms, avg_task_ms) if avg_task_ms > 0 else 0.0
         stage_skew = _safe_ratio(max_task_ms, wall_ms) if wall_ms > 0 else 0.0
         p_ratio = _safe_ratio(stage["num_tasks"], total_cores) if total_cores > 0 else 0.0
         input_total = stage["input_bytes"] + stage["shuffle_read_bytes"]
         output_total = stage["output_bytes"] + stage["shuffle_write_bytes"]
+        stage_io_total = stage["input_bytes"] + stage["output_bytes"] + stage["shuffle_read_bytes"] + stage["shuffle_write_bytes"]
         oi_ratio = _safe_ratio(output_total, input_total) if input_total > 0 else 0.0
         gc_pct = _safe_pct(stage["gc_ms_total"], stage["task_run_ms_total"])
         shuffle_write_pct = (
@@ -463,6 +595,16 @@ def _finalize_report(state: dict) -> dict:
         )
         shuffle_read_fetch_pct = _safe_pct(stage["shuffle_read_fetch_wait_ms_total"], stage["task_run_ms_total"])
         ideal_wall_ms = int(stage["task_run_ms_total"] / total_cores) if total_cores > 0 else stage["task_run_ms_total"]
+        # Per-stage percentages relative to app totals
+        wall_clock_pct = _safe_pct(wall_ms, app_duration_ms)
+        task_runtime_pct = _safe_pct(stage["task_run_ms_total"], total_stage_runtime_ms)
+        io_pct = _safe_pct(stage_io_total, total_io_bytes)
+        # CPU utilization: executor CPU time (ns) / executor run time (ms * 1e6)
+        cpu_pct = (
+            stage["executor_cpu_time_ns_total"] * 100.0 / (stage["task_run_ms_total"] * 1_000_000.0)
+            if stage["task_run_ms_total"] > 0
+            else 0.0
+        )
 
         stages_output.append(
             {
@@ -470,6 +612,8 @@ def _finalize_report(state: dict) -> dict:
                 "job_id": state["stage_to_job"].get(stage_id, -1),
                 "name": stage["name"],
                 "num_tasks": stage["num_tasks"],
+                "task_count_accepted": stage["task_count_accepted"],
+                "task_count_filtered": stage["task_count_filtered"],
                 "parent_ids": sorted(stage["parent_ids"]),
                 "wall_ms": wall_ms,
                 "start_ms": stage["start_ms"],
@@ -485,8 +629,10 @@ def _finalize_report(state: dict) -> dict:
                 "skew": {
                     "min_task_ms": min_task_ms,
                     "median_task_ms": median_task_ms,
+                    "avg_task_ms": _round_float(avg_task_ms),
                     "max_task_ms": max_task_ms,
                     "task_skew": _round_float(task_skew),
+                    "skew_avg_ratio": _round_float(skew_avg_ratio),
                     "stage_skew": _round_float(stage_skew),
                     "p_ratio": _round_float(p_ratio),
                 },
@@ -504,22 +650,56 @@ def _finalize_report(state: dict) -> dict:
                     "gc_pct": _round_float(gc_pct),
                     "shuffle_write_pct": _round_float(shuffle_write_pct),
                     "shuffle_read_fetch_pct": _round_float(shuffle_read_fetch_pct),
+                    "cpu_pct": _round_float(cpu_pct),
+                },
+                "memory": {
+                    "peak_execution_memory": stage["peak_execution_memory"],
+                    "spill_memory_bytes": stage["spill_memory_bytes"],
+                    "spill_disk_bytes": stage["spill_disk_bytes"],
+                },
+                "percentages": {
+                    "wall_clock_pct": _round_float(wall_clock_pct),
+                    "task_runtime_pct": _round_float(task_runtime_pct),
+                    "io_pct": _round_float(io_pct),
                 },
                 "ideal_wall_ms": ideal_wall_ms,
             }
         )
 
+        # ── Bottleneck detection with spec thresholds ──────────────────────
         if stage_id in top_wall_stage_ids:
             bottleneck_candidates.append({"type": "long_stage", "stage_id": stage_id, "metric_value": float(wall_ms), "score": float(wall_ms), "description": f"Stage {stage_id} is one of the longest stages by wall clock."})
         if stage_id in top_wall_stage_ids and used_pct < 50.0:
             bottleneck_candidates.append({"type": "low_parallelism", "stage_id": stage_id, "metric_value": float(used_pct), "score": 100.0 - used_pct, "description": f"Stage {stage_id} used only {used_pct:.1f}% of available core time."})
-        if task_skew > 5.0:
-            bottleneck_candidates.append({"type": "skew", "stage_id": stage_id, "metric_value": float(task_skew), "score": float(task_skew), "description": f"Stage {stage_id} has severe task skew (max/median={task_skew:.2f})."})
-        if gc_pct > 10.0:
-            bottleneck_candidates.append({"type": "gc_pressure", "stage_id": stage_id, "metric_value": float(gc_pct), "score": float(gc_pct), "description": f"Stage {stage_id} spent {gc_pct:.1f}% of executor time in JVM GC."})
+        # Skew: >2x attention, >5x critical (using max/avg per spec)
+        if skew_avg_ratio > 2.0:
+            severity = "critical" if skew_avg_ratio > 5.0 else "attention"
+            bottleneck_candidates.append({"type": "skew", "stage_id": stage_id, "metric_value": float(skew_avg_ratio), "score": float(skew_avg_ratio) * (2.0 if severity == "critical" else 1.0), "description": f"Stage {stage_id} has {'severe' if severity == 'critical' else 'moderate'} task skew (max/avg={skew_avg_ratio:.2f}x)."})
+        # GC: >5% attention, >15% critical
+        if gc_pct > 5.0:
+            severity = "critical" if gc_pct > 15.0 else "attention"
+            bottleneck_candidates.append({"type": "gc_pressure", "stage_id": stage_id, "metric_value": float(gc_pct), "score": float(gc_pct) * (2.0 if severity == "critical" else 1.0), "description": f"Stage {stage_id} spent {gc_pct:.1f}% of executor time in JVM GC ({severity})."})
+        # Shuffle bound: fetch wait >10% attention, >25% critical
+        if shuffle_read_fetch_pct > 10.0:
+            severity = "critical" if shuffle_read_fetch_pct > 25.0 else "attention"
+            bottleneck_candidates.append({"type": "shuffle_bound", "stage_id": stage_id, "metric_value": float(shuffle_read_fetch_pct), "score": float(shuffle_read_fetch_pct) * (2.0 if severity == "critical" else 1.0), "description": f"Stage {stage_id} spent {shuffle_read_fetch_pct:.1f}% of executor time waiting on shuffle fetches ({severity})."})
         shuffle_heavy_pct = shuffle_write_pct + shuffle_read_fetch_pct
         if shuffle_heavy_pct > 30.0:
             bottleneck_candidates.append({"type": "shuffle_heavy", "stage_id": stage_id, "metric_value": float(shuffle_heavy_pct), "score": float(shuffle_heavy_pct), "description": f"Stage {stage_id} spent {shuffle_heavy_pct:.1f}% of executor time in shuffle waits/writes."})
+        # Spill: any disk spill >0 = attention, >1 GB = critical
+        if stage["spill_disk_bytes"] > 0:
+            spill_gb = stage["spill_disk_bytes"] / (1024 ** 3)
+            severity = "critical" if spill_gb > 1.0 else "attention"
+            bottleneck_candidates.append({"type": "spill", "stage_id": stage_id, "metric_value": float(spill_gb), "score": float(spill_gb) * 10.0 + 5.0, "description": f"Stage {stage_id} spilled {spill_gb:.2f} GB to disk ({severity})."})
+        # Wasted% thresholds: >30% attention, >70% critical
+        if wasted_pct > 30.0:
+            severity = "critical" if wasted_pct > 70.0 else "attention"
+            bottleneck_candidates.append({"type": "low_utilization", "stage_id": stage_id, "metric_value": float(wasted_pct), "score": float(wasted_pct), "description": f"Stage {stage_id} wasted {wasted_pct:.1f}% of OneCoreComputeHours ({severity})."})
+
+    # Driver overhead bottleneck: >20% attention, >40% critical
+    if driver_pct > 20.0:
+        severity = "critical" if driver_pct > 40.0 else "attention"
+        bottleneck_candidates.append({"type": "driver_overhead", "stage_id": -1, "metric_value": float(driver_pct), "score": float(driver_pct) * (2.0 if severity == "critical" else 1.0), "description": f"Driver (non-executor) time is {driver_pct:.1f}% of total application time ({severity}). Adding executors has limited benefit."})
 
     host_output = {}
     for host in sorted(state["host_analysis"]):
@@ -588,6 +768,14 @@ def _finalize_report(state: dict) -> dict:
             "used_core_hours": _round_float(total_stage_runtime_ms / 3_600_000.0),
             "cluster_utilization_pct": _round_float(_safe_pct(total_stage_runtime_ms, available_core_ms)),
         },
+        "driver_analysis": {
+            "driver_time_ms": driver_time_ms,
+            "executor_time_ms": executor_time_ms,
+            "driver_pct": _round_float(driver_pct),
+            "executor_pct": _round_float(100.0 - driver_pct),
+            "driver_intervals": driver_intervals,
+        },
+        "environment": state["environment"],
         "jobs": jobs_output,
         "stages": stages_output,
         "scalability_simulation": scalability_simulation,
