@@ -81,7 +81,17 @@ def landing_page():
 
 
 if HAS_FRONTEND:
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    app.mount(
+        "/",
+        StaticFiles(
+            directory=str(FRONTEND_DIR),
+            html=True,
+            headers={
+                "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+            },
+        ),
+        name="frontend",
+    )
 
 
 if __name__ == "__main__":

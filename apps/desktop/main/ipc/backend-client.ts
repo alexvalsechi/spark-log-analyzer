@@ -32,10 +32,49 @@ export async function reduceZipViaPath(
   return (await res.json()) as ReduceBackendResponse
 }
 
+/**
+ * Progress polling with exponential backoff.
+ * Starts at 500ms, doubles up to 5s max interval.
+ */
 export function startProgressPoll(
   apiBaseUrl: string,
   reduceJobId: string,
   sender: Electron.WebContents,
+): ReturnType<typeof setInterval> {
+  let intervalMs = 500
+  const MAX_INTERVAL = 5000
+  const timerId = setInterval(async () => {
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/reduce-progress/${reduceJobId}`)
+      if (!res.ok) return
+      const data = (await res.json()) as ReduceProgressData
+      sender.send('reduce-progress', data)
+
+      // Exponential backoff: double interval when progress stalls
+      const percent = data.percent ?? 0
+      if (percent < 100 && percent > 5) {
+        intervalMs = Math.min(intervalMs * 2, MAX_INTERVAL)
+        clearInterval(timerId)
+        // Restart with new interval
+        const newTimer = startProgressPollWithInterval(apiBaseUrl, reduceJobId, sender, intervalMs)
+        // Store reference for cleanup
+        ;(timerId as any)._replacement = newTimer
+      } else if (percent >= 100) {
+        clearInterval(timerId)
+      }
+    } catch {
+      // Swallow transient polling errors; the next tick retries.
+    }
+  }, intervalMs)
+
+  return timerId
+}
+
+function startProgressPollWithInterval(
+  apiBaseUrl: string,
+  reduceJobId: string,
+  sender: Electron.WebContents,
+  intervalMs: number,
 ): ReturnType<typeof setInterval> {
   return setInterval(async () => {
     try {
@@ -43,10 +82,15 @@ export function startProgressPoll(
       if (!res.ok) return
       const data = (await res.json()) as ReduceProgressData
       sender.send('reduce-progress', data)
+
+      const percent = data.percent ?? 0
+      if (percent >= 100) {
+        clearInterval(timerId)
+      }
     } catch {
-      // Swallow transient polling errors; the next tick retries.
+      // Swallow transient polling errors
     }
-  }, 500)
+  }, intervalMs)
 }
 
 export async function submitReducedAnalysis(
@@ -74,9 +118,10 @@ export async function submitReducedAnalysis(
   if (userId) form.append('user_id', userId)
 
   for (const filePath of pyFilePaths) {
-    const fileBuffer = await fs.readFile(filePath)
+    // Use streams instead of reading entire file into memory
     const fileName = path.basename(filePath)
-    form.append('pyspark_files', new Blob([fileBuffer]), fileName)
+    const fileStream = await import('fs').then(fs => fs.createReadStream(filePath))
+    form.append('pyspark_files', fileStream, fileName)
   }
 
   const res = await fetch(`${apiBaseUrl}/api/upload-reduced`, {
