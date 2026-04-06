@@ -43,54 +43,36 @@ export function startProgressPoll(
 ): ReturnType<typeof setInterval> {
   let intervalMs = 500
   const MAX_INTERVAL = 5000
-  const timerId = setInterval(async () => {
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/reduce-progress/${reduceJobId}`)
-      if (!res.ok) return
-      const data = (await res.json()) as ReduceProgressData
-      sender.send('reduce-progress', data)
+  let timerId: ReturnType<typeof setInterval> | null = null
 
-      // Exponential backoff: double interval when progress stalls
-      const percent = data.percent ?? 0
-      if (percent < 100 && percent > 5) {
-        intervalMs = Math.min(intervalMs * 2, MAX_INTERVAL)
-        clearInterval(timerId)
-        // Restart with new interval
-        const newTimer = startProgressPollWithInterval(apiBaseUrl, reduceJobId, sender, intervalMs)
-        // Store reference for cleanup
-        ;(timerId as any)._replacement = newTimer
-      } else if (percent >= 100) {
-        clearInterval(timerId)
+  function scheduleNext() {
+    if (timerId !== null) clearInterval(timerId)
+    timerId = setInterval(async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/reduce-progress/${reduceJobId}`)
+        if (!res.ok) return
+        const data = (await res.json()) as ReduceProgressData
+        sender.send('reduce-progress', data)
+
+        const percent = data.percent ?? 0
+        if (percent >= 100) {
+          if (timerId !== null) clearInterval(timerId)
+          return
+        }
+
+        // Exponential backoff: double interval when progress stalls
+        if (percent > 5) {
+          intervalMs = Math.min(intervalMs * 2, MAX_INTERVAL)
+          scheduleNext()
+        }
+      } catch {
+        // Swallow transient polling errors; the next tick retries.
       }
-    } catch {
-      // Swallow transient polling errors; the next tick retries.
-    }
-  }, intervalMs)
+    }, intervalMs)
+  }
 
-  return timerId
-}
-
-function startProgressPollWithInterval(
-  apiBaseUrl: string,
-  reduceJobId: string,
-  sender: Electron.WebContents,
-  intervalMs: number,
-): ReturnType<typeof setInterval> {
-  return setInterval(async () => {
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/reduce-progress/${reduceJobId}`)
-      if (!res.ok) return
-      const data = (await res.json()) as ReduceProgressData
-      sender.send('reduce-progress', data)
-
-      const percent = data.percent ?? 0
-      if (percent >= 100) {
-        clearInterval(timerId)
-      }
-    } catch {
-      // Swallow transient polling errors
-    }
-  }, intervalMs)
+  scheduleNext()
+  return timerId!
 }
 
 export async function submitReducedAnalysis(
