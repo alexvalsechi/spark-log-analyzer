@@ -727,9 +727,26 @@ function collectUniqueSources(executions) {
 // ─── Unified Pipeline View ───────────────────────────────────────
 
 function PipelineView({ executions, onOpen }) {
+  if (!executions || !Array.isArray(executions) || executions.length === 0) {
+    return (
+      <div style={{
+        background: BG, width: '100%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: '"DM Sans", sans-serif', color: 'rgba(255,255,255,0.4)',
+      }}>
+        <span style={{ fontFamily: '"Inconsolata",monospace', fontSize: 12 }}>
+          Nenhuma execução encontrada
+        </span>
+      </div>
+    );
+  }
+
   // Group executions by stage type
   const groups = { init: [], ddl: [], compute: [], write: [] };
-  for (const ex of executions) groups[classifyExecution(ex)].push(ex);
+  for (const ex of executions) {
+    const execType = classifyExecution(ex);
+    if (groups[execType]) groups[execType].push(ex);
+  }
 
   const sources = collectUniqueSources(executions);
 
@@ -826,6 +843,8 @@ function PipelineView({ executions, onOpen }) {
                     // Execution card
                     const nc  = countNodes(item.sparkPlanInfo);
                     const { color } = STAGE_META[classifyExecution(item)] || { color: stage.color };
+                    const nodeName = String(item.sparkPlanInfo?.nodeName || '—');
+                    const desc = item.description ? String(item.description).slice(0, 40) : null;
                     return (
                       <div key={item.executionId} style={{
                         background: '#161616', border: `1px solid ${color}25`,
@@ -843,13 +862,13 @@ function PipelineView({ executions, onOpen }) {
                           marginBottom: 4, wordBreak: 'break-word',
                           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                         }}>
-                          {item.sparkPlanInfo?.nodeName || '—'}
+                          {nodeName}
                         </div>
-                        {item.description && (
+                        {desc && (
                           <div style={{
                             fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: '"Inconsolata",monospace',
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>{item.description.slice(0, 40)}</div>
+                          }}>{desc}</div>
                         )}
                         <div style={{
                           marginTop: 5, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
