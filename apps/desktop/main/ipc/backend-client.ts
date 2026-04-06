@@ -100,10 +100,9 @@ export async function submitReducedAnalysis(
   if (userId) form.append('user_id', userId)
 
   for (const filePath of pyFilePaths) {
-    // Use streams instead of reading entire file into memory
+    const fileBuffer = await fs.readFile(filePath)
     const fileName = path.basename(filePath)
-    const fileStream = await import('fs').then(fs => fs.createReadStream(filePath))
-    form.append('pyspark_files', fileStream, fileName)
+    form.append('pyspark_files', new Blob([fileBuffer]), fileName)
   }
 
   const res = await fetch(`${apiBaseUrl}/api/upload-reduced`, {
