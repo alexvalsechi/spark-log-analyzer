@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.31.0](https://github.com/alexvalsechi/sprklogs/compare/v0.30.0...v0.31.0) (2026-04-09)
+
+
+### Features
+
+* **web:** replace landing demo gif with autoplay video ([7221997](https://github.com/alexvalsechi/sprklogs/commit/72219970f652a6f00c0d95c992a92e4b9ca2bc00))
+* **web:** replace landing demo gif with autoplay video ([8d5370f](https://github.com/alexvalsechi/sprklogs/commit/8d5370f5185ad3a0f1130df473390343a8585380))
+
 ## [0.30.0](https://github.com/alexvalsechi/sprklogs/compare/v0.29.0...v0.30.0) (2026-04-09)
 
 
